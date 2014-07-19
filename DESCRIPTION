@@ -7,4 +7,4 @@ Author: James Thomson
 Maintainer: James Thomson <james_thomson@ntlworld.com>
 Description: It will take a data frame or specific R objects and covernt them to json form. A D3.js wrapper is then put around the json and an html file produced that contain the selected type of visualisation
 License: What license is it under?
-Depends: rjson
+Depends: rjson, reshape2, plyr

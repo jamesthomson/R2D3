@@ -1,3 +1,73 @@
+
+
+#' Multiple results to json
+#'
+#' Creates a json file from a sequence of events. This json will work with D3Sankey
+#'
+#' @param df
+#' @param mode
+#' @author Simon Raper 
+#' @examples 
+
+dfToJSON<-function(df, mode='vector'){
+  
+  colToList<-function(x, y){
+    
+    col.json<-list()
+    
+    #Build up a list of coordinates
+    
+    for (i in 1:length(x)){
+      
+      ni<-list(x=x[i], y=y[i])
+      col.json[[length(col.json)+1]]<-ni
+    }
+    
+    return(col.json)
+    
+  }
+  
+  
+  if (mode=='vector'){
+    
+    for.json<-list()
+    
+    for (j in 1:ncol(df)){
+      for.json[[length(for.json)+1]]<-list(name=colnames(df)[j] , data=df[,j])
+    }
+    
+  }
+  
+  if (mode=='coords') {
+    
+    for.json<-list()
+    
+    for (j in 2:ncol(df)){
+      for.json[[length(for.json)+1]]<-list(name=colnames(df)[j] , data=colToList(x=df[,1], y=df[,j]))
+    }
+    
+  }
+  
+  if (mode=='rowToObject') {
+    
+    for.json<-list()
+    
+    for (j in 1:nrow(df)){
+      # for.json[[length(for.json)+1]]<-list(df[j,])
+      for.json[[length(for.json)+1]]<-df[j,]
+    }
+    
+  }
+  
+  jj<-toJSON(for.json)
+  
+  return(jj)
+  
+}
+
+
+
+
 #' Hierachical Cluster to json
 #'
 #' Creates a json file from a hierachical clustering output
@@ -6,10 +76,10 @@
 #' @author James Thomson
 #' @examples hc <- hclust(dist(USArrests), "ave")
 #' plot(hc)
-#' JSON<-HCtoJSON(hc)
+#' JSON<-jsonHC(hc)
 #' 
 
-HCtoJSON<-function(hc){
+jsonHC<-function(hc){
   
   labels<-hc$labels
   merge<-data.frame(hc$merge)
@@ -24,16 +94,16 @@ HCtoJSON<-function(hc){
   
   eval(parse(text=paste0("JSON<-toJSON(node",nrow(merge)-1, ")")))
   
-  return(JSON)
+  return(list(Type="json:nested", json=JSON))
 }
 
 
-#' Nodes and Edges to json
+#' Multiple results to json
 #'
-#' Creates a json file from a sequence of events
+#' Creates a json file from a sequence of events. This json will work with D3Sankey
 #'
 #' @param data A data frame with first column the record identifier and a series of columns showig the allocations to compare
-#' @author James Thomson
+#' @author Simon Raper and James Thomson
 #' @examples hc.ave <- hclust(dist(USArrests), "ave")
 #' hc.single <- hclust(dist(USArrests), "single")
 #' hc.ward <- hclust(dist(USArrests), "ward.D")
@@ -44,11 +114,20 @@ HCtoJSON<-function(hc){
 #' 
 #' ClustComp<-data.frame(States=rownames(USArrests), ave=as.vector(cut.ave),single=as.vector(cut.single),ward=as.vector(cut.ward))
 #' 
-#' JSON<-NandEjson(ClustComp)
+#' JSON<-jsonCompare(ClustComp)
 
-NandEjson<-function(data){
+jsonCompare<-function(data){
   
   data<-ClustComp
+ 
+  nodes<-NULL
+  for (i in (2:ncol(data))){
+    temp<-data.frame(cluster=paste0(colnames(data)[i] ,".", data[,i]), ind=data[,1])
+    nodes<-rbind(nodes, temp)
+  }  
+  nodes.ls<-ddply(.data=nodes, .(cluster), .fun= function(x) paste0(x[,2], collapse=" \n "))
+  names(nodes.ls)<-c("name", "ind")
+    
   
   edges<-NULL
   for (i in (2:(ncol(data)-1))){
@@ -56,28 +135,39 @@ NandEjson<-function(data){
     edges<-rbind(edges, temp)
     
   }
-  colnames(edges)<-c("from", "to", "freq")
-  edges<-edges[edges$freq!=0,]
+  colnames(edges)<-c("source", "target", "value")
+  edges<-edges[edges$value!=0,]
   
-  nodes<-NULL
-  for (i in (2:ncol(data))){
-    temp<-data.frame(table(paste0(colnames(data)[i],".", data[,i])))
-    nodes<-rbind(nodes, temp)
+  links<-NULL
+  for (i in 1:nrow(edges )){
+    s<-which(as.character(nodes.ls$name)==as.character(edges$source[i]))-1
+    t<-which(as.character(nodes.ls$name)==as.character(edges$target[i]))-1
+    links<-rbind(links, data.frame(source=s,target=t, value=edges[i,3]))
   }
   
-  nested_nodes<-NULL
-  for (i in (2:ncol(data))){
-    temp<-data.frame(table(paste0(colnames(data)[i],".", data[,i])))
-    nodes<-rbind(nodes, temp)
-  }  
+    
+  n<-dfToJSON(nodes.ls,  'rowToObject')
+  e<-dfToJSON(links,  'rowToObject')
+ 
+  json<-paste0("{ \"nodes\":", n, ", \"links\": ", e, "}")
   
-  
-  
-  colnames(nodes)<-c("nodes", "freq")
-  
-  json<-paste0(toJSON(nodes), toJSON(edges))
-  return (json)
+  return(list(Type="json:compare", json=JSON))
 }
 
 
+
+#' Nodes and Linkes json
+#'
+#' Creates a json file with nodes and links. This json will work with D3Force
+#'
+#' @param nodes A datafrmae containing the nodes
+#' @oaran links A dataframe containing the links
+#' @author 
+#' @examples 
+
+jsonNodesLinks-function(nodes, links){
+ 
+  
+  
+}
 
