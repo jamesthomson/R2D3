@@ -160,14 +160,40 @@ jsonCompare<-function(data){
 #'
 #' Creates a json file with nodes and links. This json will work with D3Force
 #'
-#' @param nodes A datafrmae containing the nodes
-#' @oaran links A dataframe containing the links
-#' @author 
+#' @param nodes A dataframe containing the nodes. One of the columns should be labelled 'name'. The rest of the columns can be any node attribute.
+#' @param links A dataframe containing the links. This should consists of two columns: source and target. 
+#' These should be populated with names that are in the names column of the nodes table. An optional weight column can also be included.
+#' @author Simon Raper
 #' @examples 
+#' nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), age=c(32, 38, 45, 17, 2))
+#' links.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"))
+#' jsonNodesLinks(nodes.df, links.df)
 
-jsonNodesLinks-function(nodes, links){
- 
+jsonNodesLinks<-function(nodes, links){
   
+  nodes<-data.frame(lapply(nodes, as.character), stringsAsFactors=FALSE)
+  links<-data.frame(lapply(links, as.character), stringsAsFactors=FALSE)
+  links.lu<-NULL
+  
+  for (i in 1:nrow(links)){
+    
+    s<-which(nodes$name==links$source[i])-1
+    t<-which(nodes$name==links$target[i])-1
+    if (ncol(links)>2) 
+    {w<-links$weight[i]}
+    else
+    {w<-1}
+    
+    links.lu<-rbind(links.lu, c(s, t, w))
+    
+  }
+  
+  names(links.lu)<-c("source", "target", "value")
+  
+  n<-dfToJSON(nodes,  'rowToObject')
+  e<-dfToJSON(links.lu,  'rowToObject')
+ 
+  return(paste0("graph={ \"nodes\":", n, ", \"links\": ", e, "}"))
   
 }
 
