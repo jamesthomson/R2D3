@@ -53,7 +53,6 @@ dfToJSON<-function(df, mode='vector'){
     for.json<-list()
     
     for (j in 1:nrow(df)){
-      # for.json[[length(for.json)+1]]<-list(df[j,])
       for.json[[length(for.json)+1]]<-df[j,]
     }
     
