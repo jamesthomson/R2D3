@@ -192,7 +192,8 @@ jsonNodesLinks<-function(nodes, links){
   n<-dfToJSON(nodes,  'rowToObject')
   e<-dfToJSON(links.lu,  'rowToObject')
  
-  return(paste0("graph={ \"nodes\":", n, ", \"links\": ", e, "}"))
+  json<-paste0("graph={ \"nodes\":", n, ", \"links\": ", e, "}")
+  return(list(Type="json:nodes_links", json=json))
   
 }
 
