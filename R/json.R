@@ -1,13 +1,13 @@
 
 
-#' Multiple results to json
+#' Covenrts data to json form
 #'
-#' Creates a json file from a sequence of events. This json will work with D3Sankey
+#' Creates a json file from an input
 #'
-#' @param df
-#' @param mode
+#' @param df a data.frame to be converted 
+#' @param mode there are three modes "vector", "coords" , "rowToObject"
 #' @author Simon Raper 
-#' @examples 
+#' @examples example
 
 dfToJSON<-function(df, mode='vector'){
   
@@ -197,3 +197,57 @@ jsonNodesLinks<-function(nodes, links){
   
 }
 
+
+
+
+
+#' Data frame to nested json
+#'
+#' Creates a nested json file from a data frame
+#'
+#' @param data A data frame to be converted to a nested json
+#' @param top_label The label assigned to the top leve or first node. By default its "Top Level Label"
+#' @author James Thomson
+#' @examples data<-data.frame(
+#'Level1=c('Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent B','Parent B','Parent B','Parent B','Parent B','Parent B','Parent B','Parent C','Parent C','Parent C','Parent C','Parent C','Parent C'),
+#'Level2=c('Child A','Child A','Child A','Child A','Child B','Child B','Child C','Child C','Child C','Child C','Child C','Child C','Child D','Child D','Child D','Child D','Child E','Child E','Child E','Child F','Child G','Child G','Child G','Child G','Child G'),  
+#'Level3=c('Sub Child 1','Sub Child 2','Sub Child 3','Sub Child 4','Sub Child 5','Sub Child 6','Sub Child 7','Sub Child 8','Sub Child 9','Sub Child 10','Sub Child 11','Sub Child 12','Sub Child 13','Sub Child 14','Sub Child 15','Sub Child 16','Sub Child 17','Sub Child 18','Sub Child 19','Sub Child 20','Sub Child 21','Sub Child 22','Sub Child 23','Sub Child 24','Sub Child 25')
+#')
+
+#' JSON<-jsonNestedData(data=data, top_label="Top Level Label")
+#' 
+#' 
+
+jsonNestedData<-function(data, top_label="Top") {
+  
+  #bottom level   
+  labels<-data.frame(table(data[,ncol(data)-1]))
+  for (i in c(1:nrow(labels))) {
+    items<-data[data[,ncol(data)-1]==labels[i,1],ncol(data)]
+    eval(parse(text=paste0(gsub(" ", "_",labels[i,1]),"<-list(name=\"", labels[i,1], "\", children=list(", paste0("list(name=as.character(items[", c(1:length(items)), "]))", collapse=","),  "))")))
+  }
+  
+  #iterate through other levels
+  for (c in c((ncol(data)-2):1)) {
+    labels<-data.frame(table(data[,c]))        
+    lookup<-data.frame(table(data[,c], data[,c+1]))
+    lookup2<-lookup[lookup$Freq!=0,]
+    for (i in c(1:nrow(labels))) {
+      eval(parse(text=paste0(gsub(" ", "_",labels[i,1]),
+                             "<-list(name=\"", 
+                             labels[i,1], 
+                             paste0("\", children=list(", 
+                                    paste(gsub(" ", "_", lookup2[lookup2$Var1==labels[i,1],2]), collapse=","), ")"),
+                             ")")
+      ))
+    }
+  }
+  
+  #final top level
+  labels<-data.frame(table(data[,1]))
+  eval(parse(text=paste0("Top<-list(name=\"", top_label,"\" , children=list(", paste(gsub(" ", "_", labels[,1]), collapse=","), ")",")")))           
+  json<-toJSON(Top)
+
+  
+  return(list(Type="json:nested", json=json))
+}

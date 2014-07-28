@@ -13,7 +13,7 @@
 #' @examples hc <- hclust(dist(USArrests), "ave")
 #' plot(hc)
 #' JSON<-HCtoJSON(hc)
-#' D3Dendro(JSON, file_out="/Users/home/Documents/R_Projects/D3/USArrests_Dendo.html")
+#' D3Dendro(JSON, file_out="USArrests_Dendo.html")
 #' 
 
 D3Dendro<-function(JSON, text=15, height=800, width=700, file_out){
