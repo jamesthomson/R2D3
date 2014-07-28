@@ -23,7 +23,7 @@ Creates a html file containing json file and a D3.js Dendrogram
 hc <- hclust(dist(USArrests), "ave")
 plot(hc)
 JSON<-HCtoJSON(hc)
-D3Dendro(JSON, file_out="/Users/home/Documents/R_Projects/D3/USArrests_Dendo.html")
+D3Dendro(JSON, file_out="USArrests_Dendo.html")
 }
 \author{
 James Thomson

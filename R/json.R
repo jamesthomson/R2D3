@@ -205,8 +205,8 @@ jsonNodesLinks<-function(nodes, links){
 #'
 #' Creates a nested json file from a data frame
 #'
-#' @param data A data frame to be converted to a nested json
-#' @param top_label The label assigned to the top leve or first node. By default its "Top Level Label"
+#' @param data A data frame to be converted to a nested json. Columns need to be in order of nesting; top level on the left, bottom level on the right. Columns must contain text.
+#' @param top_label The label assigned to the top leve or first node. By default its "Top"
 #' @author James Thomson
 #' @examples data<-data.frame(
 #'Level1=c('Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent A','Parent B','Parent B','Parent B','Parent B','Parent B','Parent B','Parent B','Parent C','Parent C','Parent C','Parent C','Parent C','Parent C'),
