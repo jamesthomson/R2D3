@@ -1,6 +1,6 @@
 
 
-#' Covenrts data to json form
+#' Converts data to json form
 #'
 #' Creates a json file from an input
 #'
@@ -67,9 +67,9 @@ dfToJSON<-function(df, mode='vector'){
 
 
 
-#' Hierachical Cluster to json
+#' Hierachical Cluster output to json
 #'
-#' Creates a json file from a hierachical clustering output
+#' Creates a json file from a hierachical clustering output. This json will work with D3 Dendro
 #'
 #' @param hc A hieracichal cluster (hclust) output object
 #' @author James Thomson
@@ -97,7 +97,7 @@ jsonHC<-function(hc){
 }
 
 
-#' Multiple results to json
+#' Multiple results for comparison to json
 #'
 #' Creates a json file from a sequence of events. This json will work with D3Sankey
 #'
@@ -155,7 +155,7 @@ jsonCompare<-function(data){
 
 
 
-#' Nodes and Linkes json
+#' Nodes and Links json
 #'
 #' Creates a json file with nodes and links. This json will work with D3Force
 #'
@@ -203,7 +203,7 @@ jsonNodesLinks<-function(nodes, links){
 
 #' Data frame to nested json
 #'
-#' Creates a nested json file from a data frame
+#' Creates a nested json file from a data frame. This json will work with D3 Dendro
 #'
 #' @param data A data frame to be converted to a nested json. Columns need to be in order of nesting; top level on the left, bottom level on the right. Columns must contain text.
 #' @param top_label The label assigned to the top leve or first node. By default its "Top"
