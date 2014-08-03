@@ -25,7 +25,7 @@ cut.ward<-cutree(hc.ward, k=6)
 ClustComp<-data.frame(States=rownames(USArrests), ave=as.vector(cut.ave),single=as.vector(cut.single),ward=as.vector(cut.ward))
 
 JSON<-jsonSankey(ClustComp)
-D3Sankey(JSON, file_out="/Users/home/Documents/R_Projects/D3/Sankey.html")
+D3Sankey(JSON, file_out="Sankey.html")
 }
 \author{
 Simon Raper and James Thomson

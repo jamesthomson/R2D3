@@ -11,7 +11,7 @@ jsonNestedData(data, top_label = "Top")
 \item{top_label}{The label assigned to the top leve or first node. By default its "Top"}
 }
 \description{
-Creates a nested json file from a data frame
+Creates a nested json file from a data frame. This json will work with D3 Dendro
 }
 \examples{
 data<-data.frame(

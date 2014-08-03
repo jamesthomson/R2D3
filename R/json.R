@@ -164,14 +164,14 @@ jsonCompare<-function(data){
 #' These should be populated with names that are in the names column of the nodes table. An optional weight column can also be included.
 #' @author Simon Raper
 #' @examples 
-#' nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), age=c(32, 38, 45, 17, 2))
+#' nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), group=c(32, 38, 45, 17, 2))
 #' links.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"))
 #' jsonNodesLinks(nodes.df, links.df)
 
 jsonNodesLinks<-function(nodes, links){
   
   nodes<-data.frame(lapply(nodes, as.character), stringsAsFactors=FALSE)
-  links<-data.frame(lapply(links, as.character), stringsAsFactors=FALSE)
+  #links<-data.frame(lapply(links, as.character), stringsAsFactors=FALSE)
   links.lu<-NULL
   
   for (i in 1:nrow(links)){
@@ -186,13 +186,13 @@ jsonNodesLinks<-function(nodes, links){
     links.lu<-rbind(links.lu, c(s, t, w))
     
   }
-  
-  names(links.lu)<-c("source", "target", "value")
-  
+  links.df<-data.frame(links.lu)
+  names(links.df)<-c("source", "target", "value")
+    
   n<-dfToJSON(nodes,  'rowToObject')
-  e<-dfToJSON(links.lu,  'rowToObject')
+  e<-dfToJSON(links.df,  'rowToObject')
  
-  json<-paste0("graph={ \"nodes\":", n, ", \"links\": ", e, "}")
+  json<-paste0("{ \"nodes\":", n, ", \"links\": ", e, "}")
   return(list(Type="json:nodes_links", json=json))
   
 }

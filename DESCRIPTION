@@ -5,6 +5,6 @@ Version: 1.0
 Date: 2014-07-12
 Author: James Thomson
 Maintainer: James Thomson <james_thomson@ntlworld.com>
-Description: It will take a data frame or specific R objects and covernt them to json form. A D3.js wrapper is then put around the json and an html file produced that contain the selected type of visualisation
+Description: It will take a data frame or specific R objects and convert them to json form. A D3.js wrapper can then put around the json and an html file produced that contains the selected type of visualisation
 License: What license is it under?
 Depends: rjson, reshape2, plyr

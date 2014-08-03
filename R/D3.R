@@ -128,7 +128,7 @@ D3Dendro<-function(JSON, text=15, height=800, width=700, file_out){
 #' ClustComp<-data.frame(States=rownames(USArrests), ave=as.vector(cut.ave),single=as.vector(cut.single),ward=as.vector(cut.ward))
 #' 
 #' JSON<-jsonSankey(ClustComp)
-#' D3Sankey(JSON, file_out="/Users/home/Documents/R_Projects/D3/Sankey.html")
+#' D3Sankey(JSON, file_out="Sankey.html")
 #' 
 
 D3Sankey<-function(JSON, file_out){
@@ -311,5 +311,157 @@ function dragmove(d) {
   close(fileConn)
   
 }  
+
+
+
+#' D3 Force
+#'
+#' Creates a html file containing json file and a D3.js Force Directed Layout.
+#' If you want toe colours in teh force directed layout to represent a group. PLease ensure the column is labelled "group" in the data frame
+#'
+#' @param JSON A json object
+#' @param the location and name for the output html file
+#' @author Simon Raper and James Thomson
+#' @examples 
+#' nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), age=c(32, 38, 45, 17, 2))
+#' links.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"))
+#' JSON<-jsonNodesLinks(nodes.df, links.df)
+#' D3Force(JSON, file_out="Force.html")
+#' 
+
+D3Force<-function(JSON, file_out){
   
+  if (JSON$Type!="json:nodes_links"){stop("Incorrect json type for this D3")}
+
+header<-"<!DOCTYPE html>
+
+<style>
+
+.link {
+  stroke: #ccc;
+}
+
+.node text {
+  pointer-events: none;
+  font: 10px sans-serif;
+}
+
+
+</style>
+<body>
+<script src=\"http://d3js.org/d3.v3.min.js\"></script>
+
+<script type='text/javascript' src=\"http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js\"> </script>
+
+<script type=\"application/json\" id=\"mis\">"
+
+footer<-"</script>
+
+
+
+
+<script>
+//Constants for the SVG
+var width = 800,
+height = 800;
+
+//Set up the colour scale
+var color = d3.scale.category20();
+
+//Set up the force layout
+var force = d3.layout.force()
+.charge(-120)
+.linkDistance(80)
+.size([width, height]);
+
+//Append a SVG to the body of the html page. Assign this SVG as an object to svg
+var svg = d3.select(\"body\").append(\"svg\")
+.attr(\"width\", width)
+.attr(\"height\", height);
+
+//Read the data from the mis element 
+var mis = document.getElementById('mis').innerHTML;
+graph = JSON.parse(mis);
+
+//Creates the graph data structure out of the json data
+force.nodes(graph.nodes)
+.links(graph.links)
+.start();
+
+//Create all the line svgs but without locations yet
+var link = svg.selectAll(\".link\")
+.data(graph.links)
+.enter().append(\"line\")
+.attr(\"class\", \"link\")
+.style(\"stroke-width\", function (d) {
+return Math.sqrt(d.value);
+});
+
+//Do the same with the circles for the nodes - no 
+//Changed
+var node = svg.selectAll(\".node\")
+.data(graph.nodes)
+.enter().append(\"g\")
+.attr(\"class\", \"node\")
+.call(force.drag);
+
+node.append(\"circle\")
+.attr(\"r\", 8)
+.style(\"fill\", function (d) {
+return color(d.group);
+})
+
+node.append(\"text\")
+.attr(\"dx\", 10)
+.attr(\"dy\", \".35em\")
+.text(function(d) { return d.name });
+//End changed
+
+
+//Now we are giving the SVGs co-ordinates - the force layout is generating the co-ordinates which this code is using to update the attributes of the SVG elements
+force.on(\"tick\", function () {
+link.attr(\"x1\", function (d) {
+return d.source.x;
+})
+.attr(\"y1\", function (d) {
+return d.source.y;
+})
+.attr(\"x2\", function (d) {
+        return d.target.x;
+    })
+        .attr(\"y2\", function (d) {
+        return d.target.y;
+    });
+
+    //Changed
+    
+    d3.selectAll(\"circle\").attr(\"cx\", function (d) {
+        return d.x;
+    })
+        .attr(\"cy\", function (d) {
+        return d.y;
+    });
+
+    d3.selectAll(\"text\").attr(\"x\", function (d) {
+        return d.x;
+    })
+        .attr(\"y\", function (d) {
+        return d.y;
+    });
+    
+    //End Changed
+
+});
+ </script>
+ </body>
+ </html>"
+  
+fileConn<-file(file_out)
+writeLines(paste0(header, JSON$json, footer), fileConn)
+close(fileConn)
+
+}    
+  
+
+
   
