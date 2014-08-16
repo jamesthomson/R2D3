@@ -12,7 +12,7 @@
 #' @author James Thomson
 #' @examples hc <- hclust(dist(USArrests), "ave")
 #' plot(hc)
-#' JSON<-HCtoJSON(hc)
+#' JSON<-jsonHC(hc)
 #' D3Dendro(JSON, file_out="USArrests_Dendo.html")
 #' 
 
@@ -127,7 +127,7 @@ D3Dendro<-function(JSON, text=15, height=800, width=700, file_out){
 #' 
 #' ClustComp<-data.frame(States=rownames(USArrests), ave=as.vector(cut.ave),single=as.vector(cut.single),ward=as.vector(cut.ward))
 #' 
-#' JSON<-jsonSankey(ClustComp)
+#' JSON<-jsonCompare(ClustComp)
 #' D3Sankey(JSON, file_out="Sankey.html")
 #' 
 
@@ -327,6 +327,12 @@ function dragmove(d) {
 #' links.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"))
 #' JSON<-jsonNodesLinks(nodes.df, links.df)
 #' D3Force(JSON, file_out="Force.html")
+#' 
+#' data(celebs)
+#' colnames(celebs$relationships)<-c('source', 'target')
+#' colnames(celebs$celebs)<-c('name', 'group')
+#' JSON<-jsonNodesLinks(celebs$celebs, celebs$relationships)
+#' D3Force(JSON, file_out="/Users/home/Documents/R_Projects/Force.html")
 #' 
 
 D3Force<-function(JSON, file_out){
