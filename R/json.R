@@ -257,7 +257,7 @@ jsonNestedData<-function(structure, values=NULL, top_label="Top") {
     for (i in c(1:nrow(labels))) {
       items<-structure[structure[,ncol(structure)-1]==labels[i,1],ncol(structure)]
       vals<-values[structure[,ncol(structure)-1]==labels[i,1]]
-      eval(parse(text=paste0(gsub(" ", "_",gsub("[[:punct:]]","",labels[i,1])),"<-list(name=\"", labels[i,1], "\", children=list(", paste0("list(name=as.character(items[", c(1:length(items)), "]), value=vals[",c(1:length(items)),"])", collapse=","),  "))")))
+      eval(parse(text=paste0(gsub(" ", "_",gsub("[[:punct:]]","",labels[i,1])),"<-list(name=\"", labels[i,1], "\", children=list(", paste0("list(name=as.character(items[", c(1:length(items)), "]), size=vals[",c(1:length(items)),"])", collapse=","),  "))")))
     }
     
     #iterate through other levels
