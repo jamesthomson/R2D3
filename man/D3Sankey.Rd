@@ -24,10 +24,13 @@ cut.ward<-cutree(hc.ward, k=6)
 
 ClustComp<-data.frame(States=rownames(USArrests), ave=as.vector(cut.ave),single=as.vector(cut.single),ward=as.vector(cut.ward))
 
-JSON<-jsonSankey(ClustComp)
+JSON<-jsonCompare(ClustComp)
 D3Sankey(JSON, file_out="Sankey.html")
 }
 \author{
 Simon Raper and James Thomson
+}
+\references{
+Mike Bostock's lovely d3: http://d3js.org/
 }
 

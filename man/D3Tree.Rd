@@ -22,4 +22,7 @@ D3Tree(JSON, file_out="Tree.html")
 \author{
 James Thomson
 }
+\references{
+Mike Bostock's lovely d3: http://d3js.org/
+}
 
