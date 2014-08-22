@@ -688,6 +688,7 @@ function dragmove(d) {
 #'
 #' @param JSON A json object
 #' @param the location and name for the output html file
+#' @param options A list of features to include the graph (see the details section)
 #' @author Simon Raper and James Thomson
 #' @references Mike Bostock's lovely d3: http://d3js.org/
 #' @examples 
@@ -696,6 +697,9 @@ function dragmove(d) {
 #' JSON<-jsonNodesLinks(nodes.df, links.df)
 #' D3Force(JSON, file_out="Force.html")
 #' 
+#' #With directional arrows
+#' D3Force(JSON, file_out="Force.html", options=list(arrows=TRUE))
+#' 
 #' data(celebs)
 #' colnames(celebs$relationships)<-c('source', 'target')
 #' colnames(celebs$celebs)<-c('name', 'group')
@@ -703,7 +707,7 @@ function dragmove(d) {
 #' D3Force(JSON, file_out="/Users/home/Documents/R_Projects/Force.html")
 #' 
 
-D3Force<-function(JSON, file_out){
+D3Force<-function(JSON, file_out, options){
   
   if (JSON$Type!="json:nodes_links"){stop("Incorrect json type for this D3")}
 
@@ -829,19 +833,38 @@ return d.source.y;
  </script>
  </body>
  </html>"
+
+
+if (options$arrows==TRUE){
   
+  
+  footer<-codeInsert(footer, ".attr(\"class\", \"link\")",".style(\"marker-end\",  \"url(#suit)\")")
+    
+  footer.add<-"
+  svg.append(\"defs\").selectAll(\"marker\")
+    .data([\"suit\", \"licensing\", \"resolved\"])
+  .enter().append(\"marker\")
+    .attr(\"id\", function(d) { return d; })
+    .attr(\"viewBox\", \"0 -5 10 10\")
+    .attr(\"refX\", 25)
+    .attr(\"refY\", 0)
+    .attr(\"markerWidth\", 6)
+    .attr(\"markerHeight\", 6)
+    .attr(\"orient\", \"auto\")
+  .append(\"path\")
+    .attr(\"d\", \"M0,-5L10,0L0,5 L10,0 L0, -5\")
+    .style(\"stroke\", \"#4679BD\")
+  .style(\"opacity\", \"0.6\");"
+  
+  footer<-codeInsert(footer, "End Changed\n\n});\n", footer.add)
+}
+
 fileConn<-file(file_out)
 writeLines(paste0(header, JSON$json, footer), fileConn)
 close(fileConn)
 
 }    
   
-
-
-
-
-
-
 
 
 
