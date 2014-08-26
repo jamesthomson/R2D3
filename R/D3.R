@@ -707,7 +707,7 @@ function dragmove(d) {
 #' D3Force(JSON, file_out="/Users/home/Documents/R_Projects/Force.html")
 #' 
 
-D3Force<-function(JSON, file_out, options){
+D3Force<-function(JSON, file_out, arrows=FALSE, collision.detect=FALSE, fisheye=FALSE){
   
   if (JSON$Type!="json:nodes_links"){stop("Incorrect json type for this D3")}
 
@@ -834,12 +834,11 @@ return d.source.y;
  </body>
  </html>"
 
-
-if (options$arrows==TRUE){
+if (arrows==TRUE){
   
   
   footer<-codeInsert(footer, ".attr(\"class\", \"link\")",".style(\"marker-end\",  \"url(#suit)\")")
-    
+  
   footer.add<-"
   svg.append(\"defs\").selectAll(\"marker\")
     .data([\"suit\", \"licensing\", \"resolved\"])
@@ -858,6 +857,70 @@ if (options$arrows==TRUE){
   
   footer<-codeInsert(footer, "End Changed\n\n});\n", footer.add)
 }
+
+
+if (collision.detect==TRUE){
+  
+  
+  footer<-codeInsert(footer, ".attr(\"cy\", function (d) {\n        return d.y;\n    });","\n node.each(collide(0.5));")
+    
+  footer.add<-"
+  var padding = 1, // separation between circles
+    radius=8;
+function collide(alpha) {
+  var quadtree = d3.geom.quadtree(graph.nodes);
+  return function(d) {
+    var rb = 2*radius + padding,
+        nx1 = d.x - rb,
+        nx2 = d.x + rb,
+        ny1 = d.y - rb,
+        ny2 = d.y + rb;
+    quadtree.visit(function(quad, x1, y1, x2, y2) {
+      if (quad.point && (quad.point !== d)) {
+        var x = d.x - quad.point.x,
+            y = d.y - quad.point.y,
+            l = Math.sqrt(x * x + y * y);
+          if (l < rb) {
+          l = (l - rb) / l * alpha;
+          d.x -= x *= l;
+          d.y -= y *= l;
+          quad.point.x += x;
+          quad.point.y += y;
+        }
+      }
+      return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+    });
+  };
+}"
+  
+  footer<-codeInsert(footer, "End Changed\n\n});\n", footer.add)
+}
+
+
+if (fisheye==TRUE){
+  
+  
+  header<-codeInsert(header, "<script src=\"http://d3js.org/d3.v3.min.js\"></script>","\n <script type='text/javascript' src=\"http://bost.ocks.org/mike/fisheye/fisheye.js?0.0.3\"> </script>")
+  
+  footer.add<-"var fisheye = d3.fisheye.circular()
+      .radius(120);
+svg.on(\"mousemove\", function() {
+      force.stop();
+      fisheye.focus(d3.mouse(this));
+      d3.selectAll(\"circle\").each(function(d) { d.fisheye = fisheye(d); })
+          .attr(\"cx\", function(d) { return d.fisheye.x; })
+          .attr(\"cy\", function(d) { return d.fisheye.y; })
+          .attr(\"r\", function(d) { return d.fisheye.z * 8; });
+      link.attr(\"x1\", function(d) { return d.source.fisheye.x; })
+          .attr(\"y1\", function(d) { return d.source.fisheye.y; })
+          .attr(\"x2\", function(d) { return d.target.fisheye.x; })
+          .attr(\"y2\", function(d) { return d.target.fisheye.y; });
+    });"
+  
+  footer<-codeInsert(footer, "End Changed\n\n});\n", footer.add)
+}
+
+
 
 fileConn<-file(file_out)
 writeLines(paste0(header, JSON$json, footer), fileConn)
