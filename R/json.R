@@ -91,7 +91,7 @@ jsonHC<-function(hc){
     else if (merge[i,1]>0 & merge[i,2]>0) {eval(parse(text=paste0("node", i, "<-list(name=\"node", i, "\", children=list(node",merge[i,1] , ", node" , merge[i,2]," ))")))}
   }
   
-  eval(parse(text=paste0("JSON<-toJSON(node",nrow(merge)-1, ")")))
+  eval(parse(text=paste0("JSON<-toJSON(node",nrow(merge), ")")))
   
   return(list(Type="json:nested", json=JSON))
 }
