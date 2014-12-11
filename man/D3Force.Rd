@@ -19,8 +19,17 @@ nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), age=c(3
 links.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"))
 JSON<-jsonNodesLinks(nodes.df, links.df)
 D3Force(JSON, file_out="Force.html")
+
+data(celebs)
+colnames(celebs$relationships)<-c('source', 'target')
+colnames(celebs$celebs)<-c('name', 'group')
+JSON<-jsonNodesLinks(celebs$celebs, celebs$relationships)
+D3Force(JSON, file_out="/Users/home/Documents/R_Projects/Force.html")
 }
 \author{
 Simon Raper and James Thomson
+}
+\references{
+Mike Bostock's lovely d3: http://d3js.org/
 }
 

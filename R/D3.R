@@ -5,20 +5,27 @@
 #' Creates a html file containing json file and a D3.js Dendrogram
 #'
 #' @param JSON A json object
-#' @param text the text size in the dendrogram 
 #' @param height the height of the dendrogram
-#' @param weidth the width of the dendrogram
-#' @param the location and name for the output html file
-#' @author James Thomson
+#' @param width the width of the dendrogram
+#' @param radial.diameter The diameter of your radial visualisation. Only needed (and used) when radial=TRUE
+#' @param collapsible Logical TRUE/FALSE as to whether you want the visualisation to be collapsible with a single-click on the nodes
+#' @param radial Logical TRUE/FALSE as to whether you want the dendrogram to be radial.
+#' @param file_out the location and name for the output html file
+#' @author James Thomson & Andrew Patterson
+#' @references Mike Bostock's lovely d3: http://d3js.org/ and Captain Anonymous' collapsible radial dendrogram here: http://codepen.io/anon/pen/xItvw
 #' @examples hc <- hclust(dist(USArrests), "ave")
 #' plot(hc)
 #' JSON<-jsonHC(hc)
-#' D3Dendro(JSON, file_out="USArrests_Dendo.html")
+#' D3Dendro(JSON,width=400, file_out="USArrests_Dendo.html")
+#' D3Dendro(JSON,collapsible=TRUE,file_out="USArrests_Dendo_collapse.html")
+#' D3Dendro(JSON,collapsible=FALSE,radial=TRUE, file_out="USArrests_Dendo_radial.html")
+#' D3Dendro(JSON,collapsible=TRUE,radial=TRUE,file_out="USArrests_Dendo_collapse_radial.html")
 #' 
 
-D3Dendro<-function(JSON, text=15, height=800, width=700, file_out){
+D3Dendro<-function(JSON, file_out, height=800, width=700, radial.diameter = 1600, collapsible=FALSE, radial=FALSE){
   
   if (JSON$Type!="json:nested"){stop("Incorrect json type for this D3")}
+  if (!(is.logical(collapsible)) | !(is.logical(radial))) {stop("Incorrect collapsible and/or radial argument. Should be TRUE or FALSE")}
   
   header<-paste0("<!DOCTYPE html>
                  <meta charset=\"utf-8\">
@@ -31,7 +38,7 @@ D3Dendro<-function(JSON, text=15, height=800, width=700, file_out){
                  }
                  
                  .node {
-                 font: ",text , "px sans-serif;
+                 font: 15px sans-serif;
                  }
                  
                  .link {
@@ -46,62 +53,421 @@ D3Dendro<-function(JSON, text=15, height=800, width=700, file_out){
                  
                  <script type=\"application/json\" id=\"data\">")
   
+  if (collapsible==FALSE & radial==FALSE) {
+    footer<-paste0("</script>
+                   
+                   
+                   
+                   
+                   <script>
+                   
+                   var data = document.getElementById('data').innerHTML;
+                   root = JSON.parse(data);
+                   
+                   
+                   var width = ", width, ",
+                   height = ", height, ";
+                   
+                   var cluster = d3.layout.cluster()
+                   .size([height-50, width - 160]);
+                   
+                   var diagonal = d3.svg.diagonal()
+                   .projection(function(d) { return [d.y, d.x]; });
+                   
+                   var svg = d3.select(\"body\").append(\"svg\")
+                   .attr(\"width\", width)
+                   .attr(\"height\", height)
+                   .append(\"g\")
+                   .attr(\"transform\", \"translate(40,0)\");
+                   
+                   
+                   var nodes = cluster.nodes(root),
+                   links = cluster.links(nodes);
+                   
+                   var link = svg.selectAll(\".link\")
+                   .data(links)
+                   .enter().append(\"path\")
+                   .attr(\"class\", \"link\")
+                   .attr(\"d\", diagonal);
+                   
+                   var node = svg.selectAll(\".node\")
+                   .data(nodes)
+                   .enter().append(\"g\")
+                   .attr(\"class\", \"node\")
+                   .attr(\"transform\", function(d) { return \"translate(\" + d.y + \",\" + d.x + \")\"; })
+                   
+                   node.append(\"circle\")
+                   .attr(\"r\", 4.5);
+                   
+                   node.append(\"text\")
+                   .attr(\"dx\", function(d) { return d.children ? 8 : 8; })
+                   .attr(\"dy\", function(d) { return d.children ? 20 : 4; })
+                   .style(\"text-anchor\", function(d) { return d.children ? \"end\" : \"start\"; })
+                   .text(function(d) { return d.name; });
+                   
+                   
+                   d3.select(self.frameElement).style(\"height\", height + \"px\");
+                   
+                   </script>") 
+  } 
   
+  if (collapsible==TRUE & radial==FALSE) {
+    footer<-paste0("</script>
+                   
+                   
+                   
+                   
+                   <script>
+                   
+                   var margin = {top: 10, right: 200, bottom: 10, left: 100},
+                   width = ", width, " - margin.right - margin.left,
+                   height = ", height, " - margin.top - margin.bottom;
+                   
+                   var i = 0,
+                   duration = 750,
+                   root;
+                   
+                   var tree = d3.layout.tree()
+                   .size([height, width]);
+                   
+                   var diagonal = d3.svg.diagonal()
+                   .projection(function(d) { return [d.y, d.x]; });
+                   
+                   var svg = d3.select(\"body\").append(\"svg\")
+                   .attr(\"width\", width + margin.right + margin.left)
+                   .attr(\"height\", height + margin.top + margin.bottom)
+                   .append(\"g\")
+                   .attr(\"transform\", \"translate(\" + margin.left + \",\" + margin.top + \")\");
+                   
+                   var data = document.getElementById('data').innerHTML;
+                   root = JSON.parse(data);
+                   root.x0 = height / 2;
+                   root.y0 = 0;
+                   
+                   function collapse(d) {
+                   if (d.children) {
+                   d._children = d.children;
+                   d._children.forEach(collapse);
+                   d.children = null;
+                   }
+                   }
+                   
+                   root.children.forEach(collapse);
+                   update(root);
+                   
+                   d3.select(self.frameElement).style(\"height\", height + \"px\");
+                   
+                   function update(source) {
+                   
+                   // Compute the new tree layout.
+                   var nodes = tree.nodes(root).reverse(),
+                   links = tree.links(nodes);
+                   
+                   // Normalize for fixed-depth.
+                   // nodes.forEach(function(d) { d.y = d.depth * 180; });
+                   
+                   // Update the nodes…
+                   var node = svg.selectAll(\"g.node\")
+                   .data(nodes, function(d) { return d.id || (d.id = ++i); });
+                   
+                   // Enter any new nodes at the parent's previous position.
+                   var nodeEnter = node.enter().append(\"g\")
+                   .attr(\"class\", \"node\")
+                   .attr(\"transform\", function(d) { return \"translate(\" + source.y0 + \",\" + source.x0 + \")\"; })
+                   .on(\"click\", click);
+                   
+                   nodeEnter.append(\"circle\")
+                   .attr(\"r\", 1e-6)
+                   .style(\"fill\", function(d) { return d._children ? \"lightsteelblue\" : \"#fff\"; });
+                   
+                   nodeEnter.append(\"text\")
+                   .attr(\"x\", function(d) { return d.children || d._children ? -10 : 10; })
+                   .attr(\"dy\", \".35em\")
+                   .attr(\"text-anchor\", function(d) { return d.children || d._children ? \"end\" : \"start\"; })
+                   .text(function(d) { return d.name; })
+                   .style(\"fill-opacity\", 1e-6);
+                   
+                   // Transition nodes to their new position.
+                   var nodeUpdate = node.transition()
+                   .duration(duration)
+                   .attr(\"transform\", function(d) { return \"translate(\" + d.y + \",\" + d.x + \")\"; });
+                   
+                   nodeUpdate.select(\"circle\")
+                   .attr(\"r\", 4.5)
+                   .style(\"fill\", function(d) { return d._children ? \"lightsteelblue\" : \"#fff\"; });
+                   
+                   nodeUpdate.select(\"text\")
+                   .style(\"fill-opacity\", 1);
+                   
+                   // Transition exiting nodes to the parent's new position.
+                   var nodeExit = node.exit().transition()
+                   .duration(duration)
+                   .attr(\"transform\", function(d) { return \"translate(\" + source.y + \",\" + source.x + \")\"; })
+                   .remove();
+                   
+                   nodeExit.select(\"circle\")
+                   .attr(\"r\", 1e-6);
+                   
+                   nodeExit.select(\"text\")
+                   .style(\"fill-opacity\", 1e-6);
+                   
+                   // Update the links…
+                   var link = svg.selectAll(\"path.link\")
+                   .data(links, function(d) { return d.target.id; });
+                   
+                   // Enter any new links at the parent's previous position.
+                   link.enter().insert(\"path\", \"g\")
+                   .attr(\"class\", \"link\")
+                   .attr(\"d\", function(d) {
+                   var o = {x: source.x0, y: source.y0};
+                   return diagonal({source: o, target: o});
+                   });
+                   
+                   // Transition links to their new position.
+                   link.transition()
+                   .duration(duration)
+                   .attr(\"d\", diagonal);
+                   
+                   // Transition exiting nodes to the parent's new position.
+                   link.exit().transition()
+                   .duration(duration)
+                   .attr(\"d\", function(d) {
+                   var o = {x: source.x, y: source.y};
+                   return diagonal({source: o, target: o});
+  })
+                   .remove();
+                   
+                   // Stash the old positions for transition.
+                   nodes.forEach(function(d) {
+                   d.x0 = d.x;
+                   d.y0 = d.y;
+                   });
+  }
+                   
+                   // Toggle children on click.
+                   function click(d) {
+                   if (d.children) {
+                   d._children = d.children;
+                   d.children = null;
+                   } else {
+                   d.children = d._children;
+                   d._children = null;
+                   }
+                   update(d);
+                   }
+                   
+                   </script>")
+    
+}
+
+if (collapsible==FALSE & radial==TRUE) {
   footer<-paste0("</script>
                  
                  
                  
                  
                  <script>
+                 var radius = ",radial.diameter," / 2;
+                 
+                 var cluster = d3.layout.cluster()
+                 .size([360, radius - 120]);
+                 
+                 var diagonal = d3.svg.diagonal.radial()
+                 .projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
+                 
+                 var svg = d3.select(\"body\").append(\"svg\")
+                 .attr(\"width\", radius * 2 + 100)
+                 .attr(\"height\", radius * 2 + 100)
+                 .append(\"g\")
+                 .attr(\"transform\", \"translate(\" + radius + \",\" + radius + \")\");
                  
                  var data = document.getElementById('data').innerHTML;
                  root = JSON.parse(data);
+                 var nodes = cluster.nodes(root);
                  
-                 
-                 var width = ", width, ",
-                 height = ", height, ";
-                 
-                 var cluster = d3.layout.cluster()
-                 .size([height-50, width - 160]);
-                 
-                 var diagonal = d3.svg.diagonal()
-                 .projection(function(d) { return [d.y, d.x]; });
-                 
-                 var svg = d3.select(\"body\").append(\"svg\")
-                 .attr(\"width\", width)
-                 .attr(\"height\", height)
-                 .append(\"g\")
-                 .attr(\"transform\", \"translate(40,0)\");
-                 
-                 
-                 var nodes = cluster.nodes(root),
-                 links = cluster.links(nodes);
-                 
-                 var link = svg.selectAll(\".link\")
-                 .data(links)
+                 var link = svg.selectAll(\"path.link\")
+                 .data(cluster.links(nodes))
                  .enter().append(\"path\")
                  .attr(\"class\", \"link\")
                  .attr(\"d\", diagonal);
                  
-                 var node = svg.selectAll(\".node\")
+                 var node = svg.selectAll(\"g.node\")
                  .data(nodes)
                  .enter().append(\"g\")
                  .attr(\"class\", \"node\")
-                 .attr(\"transform\", function(d) { return \"translate(\" + d.y + \",\" + d.x + \")\"; })
+                 .attr(\"transform\", function(d) { return \"rotate(\" + (d.x - 90) + \")translate(\" + d.y + \")\"; })
                  
                  node.append(\"circle\")
                  .attr(\"r\", 4.5);
                  
                  node.append(\"text\")
-                 .attr(\"dx\", function(d) { return d.children ? 8 : 8; })
-                 .attr(\"dy\", function(d) { return d.children ? 20 : 4; })
-                 .style(\"text-anchor\", function(d) { return d.children ? \"end\" : \"start\"; })
+                 .attr(\"dy\", \".31em\")
+                 .attr(\"text-anchor\", function(d) { return d.x < 180 ? \"start\" : \"end\"; })
+                 .attr(\"transform\", function(d) { return d.x < 180 ? \"translate(8)\" : \"rotate(180)translate(-8)\"; })
                  .text(function(d) { return d.name; });
                  
+                 d3.select(self.frameElement).style(\"height\", radius * 2 + \"px\");
                  
-                 d3.select(self.frameElement).style(\"height\", height + \"px\");
                  
-                 </script>") 
+                 </script>")
+  
+}
+
+if (collapsible==TRUE & radial==TRUE) {
+  footer<-paste0("</script>
+                 
+                 
+                 
+                 
+                 <script>
+                 var diameter = ",radial.diameter,";
+                 
+                 var margin = {top: 10, right: 200, bottom: 10, left: 100},
+                 width = diameter+500,
+                 height = diameter+500;
+                 
+                 var i = 0,
+                 duration = 350,
+                 root;
+                 
+                 var tree = d3.layout.tree()
+                 .size([360, diameter / 2 - 80])
+                 .separation(function(a, b) { return (a.parent == b.parent ? 1 : 10) / a.depth; });
+                 
+                 var diagonal = d3.svg.diagonal.radial()
+                 .projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
+                 
+                 var svg = d3.select(\"body\").append(\"svg\")
+                 .attr(\"width\", width )
+                 .attr(\"height\", height )
+                 .append(\"g\")
+                 .attr(\"transform\", \"translate(\" + diameter / 2 + \",\" + diameter / 2 + \")\");
+                 
+                 var data = document.getElementById('data').innerHTML;
+                 root = JSON.parse(data);
+                 root.x0 = height / 2;
+                 root.y0 = 0;
+                 
+                 //root.children.forEach(collapse); // start with all children collapsed
+                 update(root);
+                 
+                 d3.select(self.frameElement).style(\"height\", \"800px\");
+                 
+                 function update(source) {
+                 
+                 // Compute the new tree layout.
+                 var nodes = tree.nodes(root),
+                 links = tree.links(nodes);
+                 
+                 // Normalize for fixed-depth.
+                 // nodes.forEach(function(d) { d.y = d.depth * 80; });
+                 
+                 // Update the nodes…
+                 var node = svg.selectAll(\"g.node\")
+                 .data(nodes, function(d) { return d.id || (d.id = ++i); });
+                 
+                 // Enter any new nodes at the parent's previous position.
+                 var nodeEnter = node.enter().append(\"g\")
+                 .attr(\"class\", \"node\")
+                 //.attr(\"transform\", function(d) { return \"rotate(\" + (d.x - 90) + \")translate(\" + d.y + \")\"; })
+                 .on(\"click\", click);
+                 
+                 nodeEnter.append(\"circle\")
+                 .attr(\"r\", 1e-6)
+                 .style(\"fill\", function(d) { return d._children ? \"lightsteelblue\" : \"#fff\"; });
+                 
+                 nodeEnter.append(\"text\")
+                 .attr(\"x\", 10)
+                 .attr(\"dy\", \".35em\")
+                 .attr(\"text-anchor\", \"start\")
+                 //.attr(\"transform\", function(d) { return d.x < 180 ? \"translate(0)\" : \"rotate(180)translate(-\" + (d.name.length * 8.5)  + \")\"; })
+                 .text(function(d) { return d.name; })
+                 .style(\"fill-opacity\", 1e-6);
+                 
+                 // Transition nodes to their new position.
+                 var nodeUpdate = node.transition()
+                 .duration(duration)
+                 .attr(\"transform\", function(d) { return \"rotate(\" + (d.x - 90) + \")translate(\" + d.y + \")\"; })
+                 
+                 nodeUpdate.select(\"circle\")
+                 .attr(\"r\", 4.5)
+                 .style(\"fill\", function(d) { return d._children ? \"lightsteelblue\" : \"#fff\"; });
+                 
+                 nodeUpdate.select(\"text\")
+                 .style(\"fill-opacity\", 1)
+                 .attr(\"transform\", function(d) { return d.x < 180 ? \"translate(0)\" : \"rotate(180)translate(-\" + (d.name.length + 50)  + \")\"; });
+                 
+                 // TODO: appropriate transform
+                 var nodeExit = node.exit().transition()
+                 .duration(duration)
+                 //.attr(\"transform\", function(d) { return \"diagonal(\" + source.y + \",\" + source.x + \")\"; })
+                 .remove();
+                 
+                 nodeExit.select(\"circle\")
+                 .attr(\"r\", 1e-6);
+                 
+                 nodeExit.select(\"text\")
+                 .style(\"fill-opacity\", 1e-6);
+                 
+                 // Update the links…
+                 var link = svg.selectAll(\"path.link\")
+                 .data(links, function(d) { return d.target.id; });
+                 
+                 // Enter any new links at the parent's previous position.
+                 link.enter().insert(\"path\", \"g\")
+                 .attr(\"class\", \"link\")
+                 .attr(\"d\", function(d) {
+                 var o = {x: source.x0, y: source.y0};
+                 return diagonal({source: o, target: o});
+                 });
+                 
+                 // Transition links to their new position.
+                 link.transition()
+                 .duration(duration)
+                 .attr(\"d\", diagonal);
+                 
+                 // Transition exiting nodes to the parent's new position.
+                 link.exit().transition()
+                 .duration(duration)
+                 .attr(\"d\", function(d) {
+                 var o = {x: source.x, y: source.y};
+                 return diagonal({source: o, target: o});
+})
+                 .remove();
+                 
+                 // Stash the old positions for transition.
+                 nodes.forEach(function(d) {
+                 d.x0 = d.x;
+                 d.y0 = d.y;
+                 });
+                 }
+                 
+                 // Toggle children on click.
+                 function click(d) {
+                 if (d.children) {
+                 d._children = d.children;
+                 d.children = null;
+                 } else {
+                 d.children = d._children;
+                 d._children = null;
+                 }
+                 
+                 update(d);
+                 }
+                 
+                 // Collapse nodes
+                 function collapse(d) {
+                 if (d.children) {
+                 d._children = d.children;
+                 d._children.forEach(collapse);
+                 d.children = null;
+                 }
+                 }
+                 
+                 
+                 </script>")
+    
+  }
   
   fileConn<-file(file_out)
   writeLines(paste0(header, JSON$json, footer), fileConn)
@@ -117,6 +483,7 @@ D3Dendro<-function(JSON, text=15, height=800, width=700, file_out){
 #' @param JSON A json object
 #' @param the location and name for the output html file
 #' @author Simon Raper and James Thomson
+#' @references Mike Bostock's lovely d3: http://d3js.org/
 #' @examples hc.ave <- hclust(dist(USArrests), "ave")
 #' hc.single <- hclust(dist(USArrests), "single")
 #' hc.ward <- hclust(dist(USArrests), "ward.D")
@@ -321,12 +688,17 @@ function dragmove(d) {
 #'
 #' @param JSON A json object
 #' @param the location and name for the output html file
+#' @param options A list of features to include the graph (see the details section)
 #' @author Simon Raper and James Thomson
+#' @references Mike Bostock's lovely d3: http://d3js.org/
 #' @examples 
 #' nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), age=c(32, 38, 45, 17, 2))
 #' links.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"))
 #' JSON<-jsonNodesLinks(nodes.df, links.df)
 #' D3Force(JSON, file_out="Force.html")
+#' 
+#' #With directional arrows
+#' D3Force(JSON, file_out="Force.html", options=list(arrows=TRUE))
 #' 
 #' data(celebs)
 #' colnames(celebs$relationships)<-c('source', 'target')
@@ -335,7 +707,7 @@ function dragmove(d) {
 #' D3Force(JSON, file_out="/Users/home/Documents/R_Projects/Force.html")
 #' 
 
-D3Force<-function(JSON, file_out){
+D3Force<-function(JSON, file_out, arrows=FALSE, collision.detect=FALSE, fisheye=FALSE){
   
   if (JSON$Type!="json:nodes_links"){stop("Incorrect json type for this D3")}
 
@@ -461,19 +833,101 @@ return d.source.y;
  </script>
  </body>
  </html>"
+
+if (arrows==TRUE){
   
+  
+  footer<-codeInsert(footer, ".attr(\"class\", \"link\")",".style(\"marker-end\",  \"url(#suit)\")")
+  
+  footer.add<-"
+  svg.append(\"defs\").selectAll(\"marker\")
+    .data([\"suit\", \"licensing\", \"resolved\"])
+  .enter().append(\"marker\")
+    .attr(\"id\", function(d) { return d; })
+    .attr(\"viewBox\", \"0 -5 10 10\")
+    .attr(\"refX\", 25)
+    .attr(\"refY\", 0)
+    .attr(\"markerWidth\", 6)
+    .attr(\"markerHeight\", 6)
+    .attr(\"orient\", \"auto\")
+  .append(\"path\")
+    .attr(\"d\", \"M0,-5L10,0L0,5 L10,0 L0, -5\")
+    .style(\"stroke\", \"#4679BD\")
+  .style(\"opacity\", \"0.6\");"
+  
+  footer<-codeInsert(footer, "End Changed\n\n});\n", footer.add)
+}
+
+
+if (collision.detect==TRUE){
+  
+  
+  footer<-codeInsert(footer, ".attr(\"cy\", function (d) {\n        return d.y;\n    });","\n node.each(collide(0.5));")
+    
+  footer.add<-"
+  var padding = 1, // separation between circles
+    radius=8;
+function collide(alpha) {
+  var quadtree = d3.geom.quadtree(graph.nodes);
+  return function(d) {
+    var rb = 2*radius + padding,
+        nx1 = d.x - rb,
+        nx2 = d.x + rb,
+        ny1 = d.y - rb,
+        ny2 = d.y + rb;
+    quadtree.visit(function(quad, x1, y1, x2, y2) {
+      if (quad.point && (quad.point !== d)) {
+        var x = d.x - quad.point.x,
+            y = d.y - quad.point.y,
+            l = Math.sqrt(x * x + y * y);
+          if (l < rb) {
+          l = (l - rb) / l * alpha;
+          d.x -= x *= l;
+          d.y -= y *= l;
+          quad.point.x += x;
+          quad.point.y += y;
+        }
+      }
+      return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+    });
+  };
+}"
+  
+  footer<-codeInsert(footer, "End Changed\n\n});\n", footer.add)
+}
+
+
+if (fisheye==TRUE){
+  
+  
+  header<-codeInsert(header, "<script src=\"http://d3js.org/d3.v3.min.js\"></script>","\n <script type='text/javascript' src=\"http://bost.ocks.org/mike/fisheye/fisheye.js?0.0.3\"> </script>")
+  
+  footer.add<-"var fisheye = d3.fisheye.circular()
+      .radius(120);
+svg.on(\"mousemove\", function() {
+      force.stop();
+      fisheye.focus(d3.mouse(this));
+      d3.selectAll(\"circle\").each(function(d) { d.fisheye = fisheye(d); })
+          .attr(\"cx\", function(d) { return d.fisheye.x; })
+          .attr(\"cy\", function(d) { return d.fisheye.y; })
+          .attr(\"r\", function(d) { return d.fisheye.z * 8; });
+      link.attr(\"x1\", function(d) { return d.source.fisheye.x; })
+          .attr(\"y1\", function(d) { return d.source.fisheye.y; })
+          .attr(\"x2\", function(d) { return d.target.fisheye.x; })
+          .attr(\"y2\", function(d) { return d.target.fisheye.y; });
+    });"
+  
+  footer<-codeInsert(footer, "End Changed\n\n});\n", footer.add)
+}
+
+
+
 fileConn<-file(file_out)
 writeLines(paste0(header, JSON$json, footer), fileConn)
 close(fileConn)
 
 }    
   
-
-
-
-
-
-
 
 
 
@@ -485,6 +939,7 @@ close(fileConn)
 #' @param JSON A json object
 #' @param the location and name for the output html file
 #' @author James Thomson
+#' @references Mike Bostock's lovely d3: http://d3js.org/
 #' @examples
 #' data(counties) 
 #' JSON<-jsonNestedData(structure=counties[,1:3], values=counties[,4], top_label="UK")
