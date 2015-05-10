@@ -5,9 +5,33 @@
 #' Creates a json file from an input
 #'
 #' @param df a data.frame to be converted 
-#' @param mode there are three modes "vector", "coords" , "rowToObject"
+#' @param mode there are four modes "vector", "coords" , "rowToObject", "hierarchy"
 #' @author Simon Raper 
-#' @examples example
+#' @examples
+#' 
+#' data(iris)
+#' jsonOut<-dfToJSON(iris)
+#' fileConn<-file("iris.json")
+#' writeLines(jsonOut, fileConn)
+#' close(fileConn)
+#' 
+#' jsonOut<-dfToJSON(iris, mode="rowToObject")
+#' fileConn<-file("irisRows.json")
+#' writeLines(jsonOut, fileConn)
+#' close(fileConn)
+#' 
+#' jsonOut<-dfToJSON(iris, mode="coords")
+#' fileConn<-file("irisCoords.json")
+#' writeLines(jsonOut, fileConn)
+#' close(fileConn)
+#' 
+#' tree<-dcast(data=iris, Species+Petal.Width ~ .)
+#' jsonOut<-dfToJSON(iris, mode="hierarchy")
+#' fileConn<-file("irisTree.json")
+#' writeLines(jsonOut, fileConn)
+#' close(fileConn)
+#' 
+#' @references I got the code for the recursive function that makes the json hierarchy from someone on stack overflow. I'm sorry I was going to credit them but can no loner find the post. Let me know if it's you!
 
 dfToJSON<-function(df, mode='vector'){
   
@@ -55,6 +79,23 @@ dfToJSON<-function(df, mode='vector'){
     for (j in 1:nrow(df)){
       for.json[[length(for.json)+1]]<-df[j,]
     }
+    
+  }
+  
+  if (mode=='hierarchy') {
+    
+    for.json<-list()
+    
+    makeList<-function(x){
+      if(ncol(x)>2){
+        listSplit<-split(x[-1],x[1],drop=T)
+        lapply(names(listSplit),function(y){list(name=iconv(y, "UTF-8", "UTF-8",sub='') ,children=makeList(listSplit[[y]]))})
+      }else{
+        lapply(seq(nrow(x[1])),function(y){list(name=iconv(x[,1][y], "UTF-8", "UTF-8",sub=''),size=x[,2][y])})
+      }
+    }
+    
+    for.json<-list(name="root",children=makeList(df))
     
   }
   
