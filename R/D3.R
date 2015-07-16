@@ -684,11 +684,13 @@ function dragmove(d) {
 #' D3 Force
 #'
 #' Creates a html file containing json file and a D3.js Force Directed Layout.
-#' If you want toe colours in teh force directed layout to represent a group. PLease ensure the column is labelled "group" in the data frame
+#' If you want colours in the force directed layout to represent a group, please ensure the column is labelled "group" in the data frame
 #'
 #' @param JSON A json object
-#' @param the location and name for the output html file
-#' @param options A list of features to include the graph (see the details section)
+#' @param file_out the location and name for the output html file
+#' @param arrows Boolean do you want arrow heads. By default FALSE
+#' @param collision.detect Boolean do you want avoid collisions between nodes. By default FALSE
+#' @param fisheye Boolean do you want fish eye zooming. By default FALSE
 #' @author Simon Raper and James Thomson
 #' @references Mike Bostock's lovely d3: http://d3js.org/
 #' @examples 
@@ -698,7 +700,7 @@ function dragmove(d) {
 #' D3Force(JSON, file_out="Force.html")
 #' 
 #' #With directional arrows
-#' D3Force(JSON, file_out="Force.html", options=list(arrows=TRUE))
+#' D3Force(JSON, file_out="Force.html", arrows=TRUE))
 #' 
 #' data(celebs)
 #' colnames(celebs$relationships)<-c('source', 'target')

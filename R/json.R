@@ -202,12 +202,15 @@ jsonCompare<-function(data){
 #'
 #' @param nodes A dataframe containing the nodes. One of the columns should be labelled 'name'. The rest of the columns can be any node attribute.
 #' @param links A dataframe containing the links. This should consists of two columns: source and target. 
-#' These should be populated with names that are in the names column of the nodes table. An optional weight column can also be included.
+#' These should be populated with names that are in the names column of the nodes table. An optional weight column can also be included that will define the distance between nodes. 
+#' weight should ideally between 0 and 1. If no column is provided it will default to 1
 #' @author Simon Raper
 #' @examples 
 #' nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), group=c(32, 38, 45, 17, 2))
 #' links.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"))
+#' link_weights.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"), weight=c(0.2, 0.3, 0.9))
 #' jsonNodesLinks(nodes.df, links.df)
+#' jsonNodesLinks(nodes.df, link_weights.df)
 
 jsonNodesLinks<-function(nodes, links){
   
