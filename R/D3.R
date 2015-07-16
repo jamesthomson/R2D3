@@ -749,7 +749,7 @@ var color = d3.scale.category20();
 //Set up the force layout
 var force = d3.layout.force()
 .charge(-120)
-.linkDistance(80)
+.linkDistance(function (d){return d.value*100})
 .size([width, height]);
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
