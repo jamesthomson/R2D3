@@ -1099,3 +1099,63 @@ D3Tree<-function(JSON, file_out){
   
   }    
   
+
+#' D3 Venn
+#'
+#' Creates a html file containing json file and a D3.js Tree Map.
+#' The nested json needs values assigned to it in order for it to work
+#'
+#' @param JSON A json object
+#' @param the location and name for the output html file
+#' @author James Thomson
+#' @references Ben Frederickson d3 Venn library: https://github.com/benfred/venn.js
+#' @examples data(browsers)
+#' JSON<-jsonOverlaps(browsers, overlaps = 4)
+#' D3Venn(JSON, file_out="browsers_venn.html")
+#' 
+
+D3Venn<-function(JSON, file_out){
+  
+  if (JSON$Type!="json:overlaps"){stop("Incorrect json type for this D3")}
+
+
+    header<-"<!doctype html>
+    <html lang=\"en\">
+    <head>
+        <meta charset=\"utf-8\">
+        <title>Venn diagram of Venn diagrams</title>
+    <style>
+    body {
+    font-size : 16px;
+    font-family: \"Helvetica Neue\",Helvetica,Arial,sans-serif;
+    }
+    </style>
+    </head>
+
+    <body>
+        <div id=\"venn\"></div>
+    </body>
+
+    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js\"></script>
+    <script src=\"http://benfred.github.io/venn.js/venn.js\"></script>
+    <script>
+    var sets = ["
+
+    footer<-"];
+
+    var chart = venn.VennDiagram()
+        .width(640)
+        .height(640);
+    var div = d3.select(\"#venn\").datum(sets).call(chart);
+    div.selectAll(\"text\").style(\"fill\", \"white\");
+    div.selectAll(\".venn-circle path\").style(\"fill-opacity\", .6);
+    </script>
+    </html>
+
+    "
+
+  fileConn<-file(file_out)
+  writeLines(paste0(header, JSON$json, footer), fileConn)
+  close(fileConn)
+  
+  }  

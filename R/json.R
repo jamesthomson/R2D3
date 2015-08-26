@@ -333,3 +333,71 @@ jsonNestedData<-function(structure, values=NULL, top_label="Top") {
 
 
 
+
+#' Data frame to overlaps json
+#'
+#' Creates a json file representing overlaps from a data frame. This json will work with D3 Venn
+#'
+#' @param data A data frame to be converted to json. The first column should represent the item, and the second column should represent the group it belongs to
+#' @param overlaps The degree of overlaps to be considered. Defaults to the total number of groups
+#' @author James Thomson
+#' @examples data(browsers)
+#' JSON<-jsonOverlaps(browsers, overlaps = 4)
+#' 
+#' 
+
+jsonOverlaps<-function(data, overlaps=2) {
+
+
+
+colnames(data)<-c("item","group")
+
+#work out total size of groups
+total_size<-aggregate(item ~ group, data = data, FUN = length)
+
+if(is.null(overlaps)){overlaps<-nrow(total_size)}
+
+colnames(total_size)<-c("group", "total")
+total_size$id<-seq(from=0, to=nrow(total_size)-1, by=1)
+
+#work out total size of interactions
+data$fill<-1
+
+casted<-dcast(data, item~group, fill=0, value.var="fill", fun.aggregate=max)
+headers<-colnames(casted)[-1]
+
+#clean up headers
+headers<-gsub("[[:punct:]]","_", headers)
+headers<-gsub(" ","_", headers)
+colnames(casted)<-c("item", headers)
+
+total_size$headers<-headers
+
+
+formula<-as.formula(paste0((paste0("~(", paste(headers, collapse="+"))),")^", overlaps))
+ints<-model.matrix(formula, casted)
+sizes<-colSums(ints)[-1]
+labels<-gsub(":", ",", labels(sizes))
+
+for(i in 1:nrow(total_size)){
+  labels<-gsub(total_size$headers[i],total_size$id[i],labels)
+}
+
+overlaps<-data.frame(label=labels, size=sizes)
+overlaps<-overlaps[!row.names(overlaps)%in%total_size$from,]
+
+
+venn_json_totals<-paste0(
+        paste0("{\"sets\": [",total_size$id,"], \"label\": \"", total_size$group, "\", \"size\": ",total_size$total, "},"),
+        collapse="")
+
+
+venn_json_overlaps<-paste0(
+                      paste0("{\"sets\": [",overlaps$label, "], \"size\": ", overlaps$size, "}"),
+                    collapse=",")
+
+venn_json<-paste0(venn_json_totals, venn_json_overlaps, sep="")
+
+return(list(Type="json:overlaps", json=venn_json))
+
+}
