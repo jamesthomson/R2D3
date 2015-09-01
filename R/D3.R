@@ -687,7 +687,7 @@ function dragmove(d) {
 #' If you want toe colours in teh force directed layout to represent a group. PLease ensure the column is labelled "group" in the data frame
 #'
 #' @param JSON A json object
-#' @param the location and name for the output html file
+#' @param file_out the location and name for the output html file
 #' @param options A list of features to include the graph (see the details section)
 #' @author Simon Raper and James Thomson
 #' @references Mike Bostock's lovely d3: http://d3js.org/

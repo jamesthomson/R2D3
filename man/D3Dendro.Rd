@@ -28,10 +28,10 @@ Creates a html file containing json file and a D3.js Dendrogram
 hc <- hclust(dist(USArrests), "ave")
 plot(hc)
 JSON<-jsonHC(hc)
-D3Dendro(JSON, file_out="USArrests_Dendo.html")
-D3Dendro(JSON,collapsible=TRUE,radial=FALSE,width=1600, file_out="USArrests_Dendo_collapse.html")
-D3Dendro(JSON,collapsible=FALSE,radial=TRUE,radial.diameter = 1000, file_out="USArrests_Dendo_radial.html")
-D3Dendro(JSON,collapsible=TRUE,radial=TRUE,radial.diameter = 1000, file_out="USArrests_Dendo_collapse_radial.html")
+D3Dendro(JSON,width=400, file_out="USArrests_Dendo.html")
+D3Dendro(JSON,collapsible=TRUE,file_out="USArrests_Dendo_collapse.html")
+D3Dendro(JSON,collapsible=FALSE,radial=TRUE, file_out="USArrests_Dendo_radial.html")
+D3Dendro(JSON,collapsible=TRUE,radial=TRUE,file_out="USArrests_Dendo_collapse_radial.html")
 }
 \author{
 James Thomson & Andrew Patterson
