@@ -11,11 +11,15 @@ D3Force(JSON, file_out, arrows = FALSE, collision.detect = FALSE,
 
 \item{file_out}{the location and name for the output html file}
 
-\item{options}{A list of features to include the graph (see the details section)}
+\item{arrows}{Boolean do you want arrow heads. By default FALSE}
+
+\item{collision.detect}{Boolean do you want avoid collisions between nodes. By default FALSE}
+
+\item{fisheye}{Boolean do you want fish eye zooming. By default FALSE}
 }
 \description{
 Creates a html file containing json file and a D3.js Force Directed Layout.
-If you want toe colours in teh force directed layout to represent a group. PLease ensure the column is labelled "group" in the data frame
+If you want colours in the force directed layout to represent a group, please ensure the column is labelled "group" in the data frame
 }
 \examples{
 nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), age=c(32, 38, 45, 17, 2))
@@ -24,7 +28,7 @@ JSON<-jsonNodesLinks(nodes.df, links.df)
 D3Force(JSON, file_out="Force.html")
 
 #With directional arrows
-D3Force(JSON, file_out="Force.html", options=list(arrows=TRUE))
+D3Force(JSON, file_out="Force.html", arrows=TRUE))
 
 data(celebs)
 colnames(celebs$relationships)<-c('source', 'target')

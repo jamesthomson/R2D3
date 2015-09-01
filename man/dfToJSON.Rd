@@ -8,15 +8,38 @@ dfToJSON(df, mode = "vector")
 \arguments{
 \item{df}{a data.frame to be converted}
 
-\item{mode}{there are three modes "vector", "coords" , "rowToObject"}
+\item{mode}{there are four modes "vector", "coords" , "rowToObject", "hierarchy"}
 }
 \description{
 Creates a json file from an input
 }
 \examples{
-example
+data(iris)
+jsonOut<-dfToJSON(iris)
+fileConn<-file("iris.json")
+writeLines(jsonOut, fileConn)
+close(fileConn)
+
+jsonOut<-dfToJSON(iris, mode="rowToObject")
+fileConn<-file("irisRows.json")
+writeLines(jsonOut, fileConn)
+close(fileConn)
+
+jsonOut<-dfToJSON(iris, mode="coords")
+fileConn<-file("irisCoords.json")
+writeLines(jsonOut, fileConn)
+close(fileConn)
+
+tree<-dcast(data=iris, Species+Petal.Width ~ .)
+jsonOut<-dfToJSON(iris, mode="hierarchy")
+fileConn<-file("irisTree.json")
+writeLines(jsonOut, fileConn)
+close(fileConn)
 }
 \author{
 Simon Raper
+}
+\references{
+I got the code for the recursive function that makes the json hierarchy from someone on stack overflow. I'm sorry I was going to credit them but can no loner find the post. Let me know if it's you!
 }
 

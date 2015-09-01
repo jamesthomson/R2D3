@@ -684,11 +684,13 @@ function dragmove(d) {
 #' D3 Force
 #'
 #' Creates a html file containing json file and a D3.js Force Directed Layout.
-#' If you want toe colours in teh force directed layout to represent a group. PLease ensure the column is labelled "group" in the data frame
+#' If you want colours in the force directed layout to represent a group, please ensure the column is labelled "group" in the data frame
 #'
 #' @param JSON A json object
 #' @param file_out the location and name for the output html file
-#' @param options A list of features to include the graph (see the details section)
+#' @param arrows Boolean do you want arrow heads. By default FALSE
+#' @param collision.detect Boolean do you want avoid collisions between nodes. By default FALSE
+#' @param fisheye Boolean do you want fish eye zooming. By default FALSE
 #' @author Simon Raper and James Thomson
 #' @references Mike Bostock's lovely d3: http://d3js.org/
 #' @examples 
@@ -698,7 +700,7 @@ function dragmove(d) {
 #' D3Force(JSON, file_out="Force.html")
 #' 
 #' #With directional arrows
-#' D3Force(JSON, file_out="Force.html", options=list(arrows=TRUE))
+#' D3Force(JSON, file_out="Force.html", arrows=TRUE))
 #' 
 #' data(celebs)
 #' colnames(celebs$relationships)<-c('source', 'target')
@@ -749,7 +751,7 @@ var color = d3.scale.category20();
 //Set up the force layout
 var force = d3.layout.force()
 .charge(-120)
-.linkDistance(80)
+.linkDistance(function (d){return d.value*100})
 .size([width, height]);
 
 //Append a SVG to the body of the html page. Assign this SVG as an object to svg
@@ -1097,3 +1099,63 @@ D3Tree<-function(JSON, file_out){
   
   }    
   
+
+#' D3 Venn
+#'
+#' Creates a html file containing json file and a D3.js Tree Map.
+#' The nested json needs values assigned to it in order for it to work
+#'
+#' @param JSON A json object
+#' @param the location and name for the output html file
+#' @author James Thomson
+#' @references Ben Frederickson d3 Venn library: https://github.com/benfred/venn.js
+#' @examples data(browsers)
+#' JSON<-jsonOverlaps(browsers, overlaps = 4)
+#' D3Venn(JSON, file_out="browsers_venn.html")
+#' 
+
+D3Venn<-function(JSON, file_out){
+  
+  if (JSON$Type!="json:overlaps"){stop("Incorrect json type for this D3")}
+
+
+    header<-"<!doctype html>
+    <html lang=\"en\">
+    <head>
+        <meta charset=\"utf-8\">
+        <title>Venn diagram of Venn diagrams</title>
+    <style>
+    body {
+    font-size : 16px;
+    font-family: \"Helvetica Neue\",Helvetica,Arial,sans-serif;
+    }
+    </style>
+    </head>
+
+    <body>
+        <div id=\"venn\"></div>
+    </body>
+
+    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js\"></script>
+    <script src=\"http://benfred.github.io/venn.js/venn.js\"></script>
+    <script>
+    var sets = ["
+
+    footer<-"];
+
+    var chart = venn.VennDiagram()
+        .width(640)
+        .height(640);
+    var div = d3.select(\"#venn\").datum(sets).call(chart);
+    div.selectAll(\"text\").style(\"fill\", \"white\");
+    div.selectAll(\".venn-circle path\").style(\"fill-opacity\", .6);
+    </script>
+    </html>
+
+    "
+
+  fileConn<-file(file_out)
+  writeLines(paste0(header, JSON$json, footer), fileConn)
+  close(fileConn)
+  
+  }  

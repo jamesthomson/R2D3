@@ -5,9 +5,33 @@
 #' Creates a json file from an input
 #'
 #' @param df a data.frame to be converted 
-#' @param mode there are three modes "vector", "coords" , "rowToObject"
+#' @param mode there are four modes "vector", "coords" , "rowToObject", "hierarchy"
 #' @author Simon Raper 
-#' @examples example
+#' @examples
+#' 
+#' data(iris)
+#' jsonOut<-dfToJSON(iris)
+#' fileConn<-file("iris.json")
+#' writeLines(jsonOut, fileConn)
+#' close(fileConn)
+#' 
+#' jsonOut<-dfToJSON(iris, mode="rowToObject")
+#' fileConn<-file("irisRows.json")
+#' writeLines(jsonOut, fileConn)
+#' close(fileConn)
+#' 
+#' jsonOut<-dfToJSON(iris, mode="coords")
+#' fileConn<-file("irisCoords.json")
+#' writeLines(jsonOut, fileConn)
+#' close(fileConn)
+#' 
+#' tree<-dcast(data=iris, Species+Petal.Width ~ .)
+#' jsonOut<-dfToJSON(iris, mode="hierarchy")
+#' fileConn<-file("irisTree.json")
+#' writeLines(jsonOut, fileConn)
+#' close(fileConn)
+#' 
+#' @references I got the code for the recursive function that makes the json hierarchy from someone on stack overflow. I'm sorry I was going to credit them but can no loner find the post. Let me know if it's you!
 
 dfToJSON<-function(df, mode='vector'){
   
@@ -55,6 +79,23 @@ dfToJSON<-function(df, mode='vector'){
     for (j in 1:nrow(df)){
       for.json[[length(for.json)+1]]<-df[j,]
     }
+    
+  }
+  
+  if (mode=='hierarchy') {
+    
+    for.json<-list()
+    
+    makeList<-function(x){
+      if(ncol(x)>2){
+        listSplit<-split(x[-1],x[1],drop=T)
+        lapply(names(listSplit),function(y){list(name=iconv(y, "UTF-8", "UTF-8",sub='') ,children=makeList(listSplit[[y]]))})
+      }else{
+        lapply(seq(nrow(x[1])),function(y){list(name=iconv(x[,1][y], "UTF-8", "UTF-8",sub=''),size=x[,2][y])})
+      }
+    }
+    
+    for.json<-list(name="root",children=makeList(df))
     
   }
   
@@ -161,12 +202,15 @@ jsonCompare<-function(data){
 #'
 #' @param nodes A dataframe containing the nodes. One of the columns should be labelled 'name'. The rest of the columns can be any node attribute.
 #' @param links A dataframe containing the links. This should consists of two columns: source and target. 
-#' These should be populated with names that are in the names column of the nodes table. An optional weight column can also be included.
+#' These should be populated with names that are in the names column of the nodes table. An optional weight column can also be included that will define the distance between nodes. 
+#' weight should ideally between 0 and 1. If no column is provided it will default to 1
 #' @author Simon Raper
 #' @examples 
 #' nodes.df<-data.frame(name=c("Dan", "Digby", "Lex", "Flamer", "Stripey"), group=c(32, 38, 45, 17, 2))
 #' links.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"))
+#' link_weights.df<-data.frame(source=c("Dan", "Digby", "Flamer"), target=c("Lex", "Flamer", "Stripey"), weight=c(0.2, 0.3, 0.9))
 #' jsonNodesLinks(nodes.df, links.df)
+#' jsonNodesLinks(nodes.df, link_weights.df)
 
 jsonNodesLinks<-function(nodes, links){
   
@@ -289,3 +333,71 @@ jsonNestedData<-function(structure, values=NULL, top_label="Top") {
 
 
 
+
+#' Data frame to overlaps json
+#'
+#' Creates a json file representing overlaps from a data frame. This json will work with D3 Venn
+#'
+#' @param data A data frame to be converted to json. The first column should represent the item, and the second column should represent the group it belongs to
+#' @param overlaps The degree of overlaps to be considered. Defaults to the total number of groups
+#' @author James Thomson
+#' @examples data(browsers)
+#' JSON<-jsonOverlaps(browsers, overlaps = 4)
+#' 
+#' 
+
+jsonOverlaps<-function(data, overlaps=2) {
+
+
+
+colnames(data)<-c("item","group")
+
+#work out total size of groups
+total_size<-aggregate(item ~ group, data = data, FUN = length)
+
+if(is.null(overlaps)){overlaps<-nrow(total_size)}
+
+colnames(total_size)<-c("group", "total")
+total_size$id<-seq(from=0, to=nrow(total_size)-1, by=1)
+
+#work out total size of interactions
+data$fill<-1
+
+casted<-dcast(data, item~group, fill=0, value.var="fill", fun.aggregate=max)
+headers<-colnames(casted)[-1]
+
+#clean up headers
+headers<-gsub("[[:punct:]]","_", headers)
+headers<-gsub(" ","_", headers)
+colnames(casted)<-c("item", headers)
+
+total_size$headers<-headers
+
+
+formula<-as.formula(paste0((paste0("~(", paste(headers, collapse="+"))),")^", overlaps))
+ints<-model.matrix(formula, casted)
+sizes<-colSums(ints)[-1]
+labels<-gsub(":", ",", labels(sizes))
+
+for(i in 1:nrow(total_size)){
+  labels<-gsub(total_size$headers[i],total_size$id[i],labels)
+}
+
+overlaps<-data.frame(label=labels, size=sizes)
+overlaps<-overlaps[!row.names(overlaps)%in%total_size$from,]
+
+
+venn_json_totals<-paste0(
+        paste0("{\"sets\": [",total_size$id,"], \"label\": \"", total_size$group, "\", \"size\": ",total_size$total, "},"),
+        collapse="")
+
+
+venn_json_overlaps<-paste0(
+                      paste0("{\"sets\": [",overlaps$label, "], \"size\": ", overlaps$size, "}"),
+                    collapse=",")
+
+venn_json<-paste0(venn_json_totals, venn_json_overlaps, sep="")
+
+return(list(Type="json:overlaps", json=venn_json))
+
+}
