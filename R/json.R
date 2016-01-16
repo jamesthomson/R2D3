@@ -401,3 +401,98 @@ venn_json<-paste0(venn_json_totals, venn_json_overlaps, sep="")
 return(list(Type="json:overlaps", json=venn_json))
 
 }
+
+
+#' Data frame to cross tabs json
+#'
+#' Creates a json file representing between two categorical variables. This json will work with D3 Heat
+#'
+#' @param data A data frame to be converted to json. It should contain two columns one for each categorical variable
+#' @author James Thomson
+#' @examples data<-data.frame(airquality$Month, airquality$Temp)
+#' json<-jsonXtabs(data)
+ 
+
+jsonXtabs<-function(data){
+  
+  xtab<-table(data[,1], data[,2])
+  rowperc=round(prop.table(xtab, 1)*100)
+  colperc=round(prop.table(xtab, 2)*100)
+  
+  rows=rownames(xtab)
+  cols=colnames(xtab)
+  
+  rowlab=paste0("var rows=['", paste0(rows, collapse="','"), "'];")
+  collab=paste0("var cols=['", paste0(cols, collapse="','"), "'];")
+  
+  #frequencies
+  var_data=NULL
+  for(r in 1:length(rows)){
+    for( c in 1:length(cols)){
+      temp=paste0("{value: ",xtab[r,c], ", row: ", r, ", col: ", c, "}" )
+      var_data=c(var_data, temp)
+    }
+  }
+  freq=paste0("var freq=[", paste0(var_data, collapse=","), "];")
+  
+  #row percentage
+  var_data=NULL
+  for(r in 1:length(rows)){
+    for( c in 1:length(cols)){
+      temp=paste0("{value: ",rowperc[r,c], ", row: ", r, ", col: ", c, "}" )
+      var_data=c(var_data, temp)
+    }
+  }
+  rowp=paste0("var rowp=[", paste0(var_data, collapse=","), "];")
+  
+  #col percentages
+  var_data=NULL
+  for(r in 1:length(rows)){
+    for( c in 1:length(cols)){
+      temp=paste0("{value: ",colperc[r,c], ", row: ", r, ", col: ", c, "}" )
+      var_data=c(var_data, temp)
+    }
+  }
+  colp=paste0("var colp=[", paste0(var_data, collapse=","), "];")
+  
+  
+  json<-c(rowlab, collab, freq, colp, rowp)
+
+  
+  return(list(Type="json:crosstabs", json=json))
+
+}
+
+
+
+#' Data to word frequency json
+#'
+#' Creates a json file of word frequencies. This json will work with D3 Word Cloud
+#'
+#' @param words A list of the words. Either a full list. Or a unique list and use the freq argument
+#' @param freq Optional a list of frequencies for the words
+#' @author James Thomson
+#' @examples words=c("big", "data", "machine", "learning", "wordcloud", "R", "d3js", "algorithm", "analytics", "science", "API")
+#' freq=c(50, 50, 30, 30, 100, 10, 10, 10, 5, 5, 5 )
+#' json<-jsonwordcloud(words, freq)
+
+
+
+
+jsonwordcloud<-function(words, freq=NULL){
+  
+  #option to form frequencies from a list if no freq are input, otherwise just use list and frequency as input
+  if (is.null(freq)){
+    table<-table(words)
+    words<-rownames(table)
+    freq<-as.numeric(table)
+  }
+  
+  #rescale frequencies
+  freq=150/max(freq)*freq
+  
+  json=paste0("var frequency_list = [", paste0("{\"text\":\"", words, "\", \"size\":", freq, "}", collapse=","),"];" ) 
+  
+  
+  return(list(Type="json:wordcloud", json=json))
+}

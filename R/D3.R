@@ -1102,7 +1102,7 @@ D3Tree<-function(JSON, file_out){
 
 #' D3 Venn
 #'
-#' Creates a html file containing json file and a D3.js Tree Map.
+#' Creates a html file containing json file and a D3.js Venn diagram.
 #' The nested json needs values assigned to it in order for it to work
 #'
 #' @param JSON A json object
@@ -1159,3 +1159,358 @@ D3Venn<-function(JSON, file_out){
   close(fileConn)
   
   }  
+
+
+#' D3 XtabHeat
+#'
+#' Creates a html file containing json file and a D3.js Cross tab Heat map.
+#' The nested json needs values assigned to it in order for it to work
+#'
+#' @param JSON A json object
+#' @param file_out the location and name for the output html file
+#' @author James Thomson
+#' @references http://bl.ocks.org/tjdecke/5558084
+#' @examples  data<-data.frame(airquality$Month, airquality$Temp)
+#' json<-jsonXtabs(data)
+#' D3XtabHeat(json, file_out="heat_map.html")
+
+
+
+D3XtabHeat<-function(JSON, file_out){
+  
+  if (JSON$Type!="json:crosstabs"){stop("Incorrect json type for this D3")}
+  
+  
+  header<-"<!DOCTYPE html>
+<meta charset=\"utf-8\">
+<html>
+  
+  <style>
+  rect.tileborder {
+  stroke: #E6E6E6;
+  stroke-width:2px;   
+  }
+  
+  text.legendlabels {
+  font-size: 11pt;
+  font-family: Consolas, courier;
+  fill: #555555;
+  }
+  
+  text.scorelabels {
+  font-size: 11pt;
+  fill: #000000;
+  }
+  
+  text.gridlabels {
+  font-size: 11pt;
+  fill: #555555;
+  }
+  
+  
+  </style>
+  
+  <body>
+  
+  <select id = \"opts\">
+  <option value=\"freq\" selected=\"selected\">Frequencies</option>
+  <option value=\"rowp\">Percentage of Rows</option> 
+  <option value=\"colp\">Percentage of Columns</option> 
+  </select>
+  
+  
+  <div id=\"chart\"></div>
+  <div id=\"dataset-picker\"></div>
+  
+  
+  <script src=\"http://d3js.org/d3.v3.js\"></script>    
+  <script type=\"text/javascript\">
+  
+  
+  //data inputs"
+
+  
+  
+  
+  footer<-"
+
+
+  //bucket definitions for heat map
+  // how many splits
+  var buckets = 9;
+  // colors for splits
+  //blues
+  //var colors = [\"#ffffd9\",\"#edf8b1\",\"#c7e9b4\",\"#7fcdbb\",\"#41b6c4\",\"#1d91c0\",\"#225ea8\",\"#253494\",\"#081d58\"]; 
+  //oranges
+  var colors = [\"#fff5eb\",\"#fee6ce\",\"#fdd0a2\",\"#fdae6b\",\"#fd8d3c\",\"#f16913\",\"#d94801\",\"#a63603\",\"#7f2704\"];
+  
+  
+  //layout space for d3
+  var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+  width = 1000 - margin.left - margin.right,
+  height = 500 - margin.top - margin.bottom
+  
+  //figure out gridsize based on number of rows and cols and layout space     
+  var gridmax;
+  if (width/cols.length < height/rows.length) { 
+    gridmax = width/cols.length;
+  } else {
+    gridmax = height/rows.length;
+  }
+  
+  
+  //create tile grid size
+  var gridSize = Math.floor(gridmax);
+  
+  //size of legend elements
+  var legendElementWidth = gridSize*2  ;  
+  
+  //create svg and position
+  var svg = d3.select(\"#chart\").append(\"svg\")
+  .attr(\"width\", width + margin.left + margin.right)
+  .attr(\"height\", height + margin.top + margin.bottom)
+  .append(\"g\")
+  .attr(\"transform\", \"translate(\" + margin.left + \",\" + margin.top + \")\");
+  
+  //place row labels for grid
+  var rowLabels = svg.selectAll(\".rowLabel\")
+  .data(rows)
+  .enter().append(\"text\")
+  .text(function (d) { return d; })
+  .attr(\"x\", 0)
+  .attr(\"y\", function (d, i) { return i * gridSize; })
+  .style(\"text-anchor\", \"end\")
+  .attr(\"transform\", \"translate(-6,\" + gridSize / 1.5 + \")\")
+  .attr(\"class\", \"gridlabels\");
+  
+  //place col labels for grid
+  var colLabels = svg.selectAll(\".colLabel\")
+  .data(cols)
+  .enter().append(\"text\")
+  .text(function(d) { return d; })
+  .attr(\"x\", function(d, i) { return i * gridSize; })
+  .attr(\"y\", 0)
+  .style(\"text-anchor\", \"middle\")
+  .attr(\"transform\", \"translate(\" + gridSize / 2 + \", -6)\")
+  .attr(\"class\", \"gridlabels\");
+  
+  
+  
+  //create function for execution in transition between datasets
+  var heatmapChart = function(newdata) {
+    
+    //set up color scaling for dataset
+    var colorScale = d3.scale.quantile()
+    .domain([0, buckets - 1, d3.max(newdata, function (d) { return d.value; })])
+    .range(colors);
+    
+    
+    //assign new data to tiles
+    var tiles = svg.selectAll(\".tiles\").data(newdata);
+    
+    //enter tiles to d3
+    tiles.enter().append(\"rect\")
+    .attr(\"x\", function(d) { return (d.col - 1) * gridSize; })
+    .attr(\"y\", function(d) { return (d.row - 1) * gridSize; })
+    .attr(\"rx\", 4)
+    .attr(\"ry\", 4)
+    .attr(\"class\", \"tileborder\")
+    .attr(\"width\", gridSize)
+    .attr(\"height\", gridSize)
+    .style(\"fill\", colors[0]);
+    
+    //transition tiles
+    tiles.transition().duration(1000)
+    .style(\"fill\", function(d) { return colorScale(d.value); });
+    
+    //remove tiles
+    tiles.exit().remove();
+    
+    
+    
+    //repeat tile block but for values
+    var values = svg.selectAll(\".values\").data(newdata);
+    
+    values.enter().append(\"text\")
+    .attr(\"x\", function(d) { return (d.col - 1) * gridSize; })
+    .attr(\"y\", function(d) { return (d.row - 1) * gridSize; })
+    .attr(\"rx\", 4)
+    .attr(\"ry\", 4)
+    .attr(\"class\", \"scorelabels\")
+    .text(function (d) { return d.value; })
+    .style(\"text-anchor\", \"middle\")
+    .attr(\"transform\", \"translate(\" + (gridSize) / 2 + \",\" + (gridSize) / 1.5 + \")\")
+    
+    ;
+    
+    values.transition().duration(1000);
+    
+    values.exit().remove();
+    
+    
+    
+    //repeat tile block but for legend
+    var legend = svg.selectAll(\".legend\")
+    .data([0].concat(colorScale.quantiles()), function(d) { return d; });
+    
+    legend.enter().append(\"g\")
+    .attr(\"class\", \"legend\");
+    
+    legend.append(\"rect\")
+    .attr(\"x\", function(d, i) { return legendElementWidth * i; })
+    .attr(\"y\", gridSize*(rows.length+1))
+    .attr(\"width\", legendElementWidth)
+    .attr(\"height\", gridSize / 2)
+    .style(\"fill\", function(d, i) { return colors[i]; });
+    
+    legend.append(\"text\")
+    .attr(\"class\", \"legendlabels\")
+    .text(function(d) { return \"≥ \" + Math.round(d); })
+    .attr(\"x\", function(d, i) { return legendElementWidth * i; })
+    .attr(\"y\", gridSize*(rows.length+2));
+    
+    legend.exit().remove();
+  };
+  
+  
+  //initial run of the function
+  heatmapChart(freq);
+  
+  //run function depending on input selected in drop down list
+  d3.select('#opts').
+  on('change', function() {
+    var newData = eval(d3.select(this).property('value'));
+    heatmapChart(newData);
+  }); 
+  
+  
+  
+  </script>
+    </body>
+    </html>
+  
+  "
+  
+  
+  fileConn<-file(file_out)
+  writeLines(c(header, JSON$json, footer), fileConn)
+  close(fileConn)
+  
+}  
+
+#' D3 Word Cloud
+#'
+#' Creates a html file containing json file and a D3.js Cross tab Heat map.
+#' The nested json needs values assigned to it in order for it to work
+#'
+#' @param JSON A json object
+#' @param file_out the location and name for the output html file
+#' @author James Thomson
+#' @references https://github.com/jasondavies/d3-cloud
+#' @examples  words=c("big", "data", "machine", "learning", "wordcloud", "R", "d3js", "algorithm", "analytics", "science", "API")
+#' freq=c(50, 50, 30, 30, 100, 10, 10, 10, 5, 5, 5 )
+#' json<-jsonwordcloud(words, freq)
+#' D3WordCloud(json, file_out="word_cloud.html")
+
+
+
+D3WordCloud<-function(JSON, file_out){
+  
+  if (JSON$Type!="json:wordcloud"){stop("Incorrect json type for this D3")}
+  
+ header<-"<!DOCTYPE html>
+<html>
+
+ <script src=\"http://d3js.org/d3.v3.min.js\"></script>
+ <script src=\"https://jardindesconnaissances.googlecode.com/svn-history/r82/trunk/public/js/d3.layout.cloud.js\"></script>
+ 
+ <head>
+ <title>Word Cloud Example</title>
+ </head>
+ 
+ 
+ 
+ <style>
+ body {
+ font-family:\"Lucida Grande\",\"Droid Sans\",Arial,Helvetica,sans-serif;
+ }
+ .legend {
+ border: 1px solid #555555;
+ border-radius: 5px 5px 5px 5px;
+ font-size: 0.8em;
+ margin-left: 80px;
+ margin-top: 0px;
+ padding: 8px;
+ }
+ .bld {
+ font-weight: bold;
+ }
+ 
+ </style>
+ 
+ 
+ 
+ 
+ 
+ <body>
+ 
+ </body>
+ 
+ 
+ 
+ <script>" 
+ 
+ footer<- "//var color = d3.scale.category20();
+    
+   var color = d3.scale.linear()
+ .domain([0,1,2,3,4,5,6,10,15,20,100])
+ .range([\"#ddd\", \"#ccc\", \"#bbb\", \"#aaa\", \"#999\", \"#888\", \"#777\", \"#666\", \"#555\", \"#444\", \"#333\", \"#222\"]);
+ 
+ function draw(words) {
+   d3.select(\"body\").append(\"svg\")
+   .attr(\"width\", 850)
+   .attr(\"height\", 350)
+   .attr(\"class\", \"wordcloud\")
+   .append(\"g\")
+   // without the transform, words words would get cutoff to the left and top, they would
+   // appear outside of the SVG area
+   .attr(\"transform\", \"translate(320,200)\")
+   .selectAll(\"text\")
+   .data(words)
+   .enter().append(\"text\")
+   .style(\"font-size\", function(d) { return d.size + \"px\"; })
+   .style(\"fill\", function(d, i) { return color(i); })
+   .attr(\"transform\", function(d) {
+     return \"translate(\" + [d.x, d.y] + \")rotate(\" + d.rotate + \")\";
+   })
+   .text(function(d) { return d.text; });
+ }
+ 
+ d3.layout.cloud().size([700, 300])
+ .words(frequency_list)
+ .rotate(0)
+ .fontSize(function(d) { return d.size; })
+ .on(\"end\", draw)
+ .start()
+ ;
+ 
+ 
+ </script>
+   
+   <div style=\"width: 49%;\">
+   <div class=\"legend\">
+   Commonly used words are larger and slightly faded in color, less common words are smaller and darker.
+ </div>
+   
+   </div>
+   
+   </html>"
+  
+    
+  fileConn<-file(file_out)
+  writeLines(c(header, JSON$json, footer), fileConn)
+  close(fileConn)
+  
+} 
+  
+  
