@@ -12,8 +12,8 @@ D3WordCloud(JSON, file_out)
 \item{file_out}{the location and name for the output html file}
 }
 \description{
-Creates a html file containing json file and a D3.js Cross tab Heat map.
-The nested json needs values assigned to it in order for it to work
+Creates a html file containing json data and a D3.js Word cloud.
+It works with the jsonWordCloud function
 }
 \examples{
 words=c("big", "data", "machine", "learning", "wordcloud", "R", "d3js", "algorithm", "analytics", "science", "API")

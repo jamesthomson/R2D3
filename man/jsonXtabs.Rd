@@ -10,7 +10,7 @@ jsonXtabs(data)
 \item{data}{A data frame to be converted to json. It should contain two columns one for each categorical variable}
 }
 \description{
-Creates a json file representing between two categorical variables. This json will work with D3 Heat
+Creates a json file representing between two categorical variables. This json will work with D3XtabHeat
 }
 \examples{
 data<-data.frame(airquality$Month, airquality$Temp)

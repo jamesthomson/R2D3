@@ -405,7 +405,7 @@ return(list(Type="json:overlaps", json=venn_json))
 
 #' Data frame to cross tabs json
 #'
-#' Creates a json file representing between two categorical variables. This json will work with D3 Heat
+#' Creates a json file representing between two categorical variables. This json will work with D3XtabHeat
 #'
 #' @param data A data frame to be converted to json. It should contain two columns one for each categorical variable
 #' @author James Thomson
@@ -474,12 +474,12 @@ jsonXtabs<-function(data){
 #' @author James Thomson
 #' @examples words=c("big", "data", "machine", "learning", "wordcloud", "R", "d3js", "algorithm", "analytics", "science", "API")
 #' freq=c(50, 50, 30, 30, 100, 10, 10, 10, 5, 5, 5 )
-#' json<-jsonwordcloud(words, freq)
+#' json<-jsonWordCloud(words, freq)
 
 
 
 
-jsonwordcloud<-function(words, freq=NULL){
+jsonWordCloud<-function(words, freq=NULL){
   
   #option to form frequencies from a list if no freq are input, otherwise just use list and frequency as input
   if (is.null(freq)){
@@ -496,3 +496,98 @@ jsonwordcloud<-function(words, freq=NULL){
   
   return(list(Type="json:wordcloud", json=json))
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#' Sequence frequency json
+#'
+#' Creates a json file of sequence frequencies. This json will work with D3 Sunburst
+#'
+#' @param seq A vector of sequences. Each item in sequence must be seperated by a -. For example item1-item2-item3
+#' @param freq A vector of frequencies for the sequences
+#' @author James Thomson
+#' @examples data<-read.csv(file="https://gist.githubusercontent.com/kerryrodden/7090426/raw/8fce22c9e21711c757ee8a0df7dba5a42dea0d9c/visit-sequences.csv",
+#'header = FALSE,  stringsAsFactors = FALSE
+#')
+#'seq<-data[-13632,1]
+#'freq<-data[-13632,2]
+#'jsonSeqFreq(seq, freq)
+
+
+jsonSeqFreq<-function(seq, freq){
+  
+  json<-paste0("var csv = [", 
+              paste0("[\"", seq, "\",", freq,"]", collapse=","),
+              "];"
+  )
+      
+  return(list(Type="json:sunburst", json=json))
+}
+
+
+
+#' Sequence frequency json
+#'
+#' Creates a json file of sequence frequencies. This json will work with D3 Sunburst
+#'
+#' @param seq A vector of sequences. Each item in sequence must be seperated by a -. For example item1-item2-item3
+#' @param freq A vector of frequencies for the sequences
+#' @author James Thomson
+#' @examples data<-read.csv(file="https://gist.githubusercontent.com/kerryrodden/7090426/raw/8fce22c9e21711c757ee8a0df7dba5a42dea0d9c/visit-sequences.csv",
+#'header = FALSE,  stringsAsFactors = FALSE
+#')
+#'seq<-data[-13632,1]
+#'freq<-data[-13632,2]
+#'jsonSeqFreq(seq, freq)
+
+
+jsonSeqFreq<-function(seq, freq){
+  
+  json<-paste0("var csv = [", 
+               paste0("[\"", seq, "\",", freq,"]", collapse=","),
+               "];"
+  )
+  
+  return(list(Type="json:sunburst", json=json))
+}
+
+
+#' Matrix json
+#'
+#' Creates a json file of sequence frequencies. This json will work with D3 Sunburst
+#'
+#' @param matrix An x by x data matrix
+#' @param labels An vector of x length containing labels for the matrix
+#' @author James Thomson
+#' @examples dm<-matrix(c(11975,1951,8010,1013,5871,10048,16145,990,8916,2060,8090,940,2868,6171,8045,6907), 4,4)
+#' labels<-c("Group1", "Group2", "Group3", "Group4")
+#' json<-jsonMatrix(dm, labels)
+
+
+jsonMatrix<-function(matrix, labels){
+  
+  json<-paste0("var matrix = [",
+  paste0("[", apply(dm, 1, paste, collapse=","),"]", collapse=","),
+  "]; \n",
+  "var labels = [",
+  paste0("\"", labels, "\"", collapse=","),
+  "];"
+  )
+  
+  
+  return(list(Type="json:matrix", json=json))
+}
+
+
