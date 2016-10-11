@@ -158,8 +158,7 @@ jsonHC<-function(hc){
 
 jsonCompare<-function(data){
   
-  data<-ClustComp
- 
+  
   nodes<-NULL
   for (i in (2:ncol(data))){
     temp<-data.frame(cluster=paste0(colnames(data)[i] ,".", data[,i]), ind=data[,1])
