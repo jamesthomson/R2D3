@@ -18,7 +18,7 @@ It works with the jsonWordCloud function
 \examples{
 words=c("big", "data", "machine", "learning", "wordcloud", "R", "d3js", "algorithm", "analytics", "science", "API")
 freq=c(50, 50, 30, 30, 100, 10, 10, 10, 5, 5, 5 )
-json<-jsonwordcloud(words, freq)
+json<-jsonWordCloud(words, freq)
 D3WordCloud(json, file_out="word_cloud.html")
 }
 \author{

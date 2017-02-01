@@ -1409,7 +1409,7 @@ D3XtabHeat<-function(JSON, file_out){
 #' @references https://github.com/jasondavies/d3-cloud
 #' @examples  words=c("big", "data", "machine", "learning", "wordcloud", "R", "d3js", "algorithm", "analytics", "science", "API")
 #' freq=c(50, 50, 30, 30, 100, 10, 10, 10, 5, 5, 5 )
-#' json<-jsonwordcloud(words, freq)
+#' json<-jsonWordCloud(words, freq)
 #' D3WordCloud(json, file_out="word_cloud.html")
 
 
@@ -1422,7 +1422,7 @@ D3WordCloud<-function(JSON, file_out){
 <html>
 
  <script src=\"http://d3js.org/d3.v3.min.js\"></script>
- <script src=\"https://jardindesconnaissances.googlecode.com/svn-history/r82/trunk/public/js/d3.layout.cloud.js\"></script>
+ <script src=\"http://bl.ocks.org/ericcoopey/raw/6382449/d3.layout.cloud.js\"></script>
  
  <head>
  <title>Word Cloud Example</title>
